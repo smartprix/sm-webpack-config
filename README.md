@@ -49,12 +49,12 @@ const gulp = require('gulp');
 
 // The development server (the recommended option for development)
 gulp.task('default', function(callback) {
-	sm.runDevServer(callback);
+	smWebpack.runDevServer(callback);
 });
 
-// Build files for developement
+// Build files for production
 gulp.task('build', function(callback) {
-	sm.runProdWebpack(callback);
+	smWebpack.runProdWebpack(callback);
 });
 ```
 
