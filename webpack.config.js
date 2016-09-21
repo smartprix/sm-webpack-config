@@ -59,7 +59,7 @@ function getConfig(env) {
 		},
 		resolve: {
 			extensions: ['', '.js', '.vue'],
-			modules: [path.join(__dirname, 'node_modules')],
+			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 			alias: {
 				'src': path.join(config.sourcePath, 'js'),
 				'js': path.join(config.sourcePath, 'js'),
@@ -70,7 +70,7 @@ function getConfig(env) {
 			},
 		},
 		resolveLoader: {
-			modules: [path.join(__dirname, 'node_modules')],
+			modules: [path.join(__dirname, 'node_modules'), path.join(cwd, 'node_modules')],
 		},
 		module: {
 			preLoaders: [
@@ -111,11 +111,13 @@ function getConfig(env) {
 		babel: {
 			presets: [
 				[
-					path.join(__dirname, "node_modules", "babel-preset-es2015"),
+					require.resolve("babel-preset-es2015"),
 					{ "loose": true, "modules": false }
 				],
 			],
-			plugins: [path.join(__dirname, "node_modules", "babel-plugin-transform-vue-jsx")],
+			plugins: [
+				require.resolve("babel-plugin-transform-vue-jsx"),
+			],
 		},
 		node: {
 			console: false,
