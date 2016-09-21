@@ -66,7 +66,7 @@ function getConfig(env) {
 				'assets': path.join(config.sourcePath),
 				'components': path.join(config.sourcePath, 'js', 'components'),
 				'css': path.join(config.sourcePath, 'css'),
-				'img': path.join(config.sourcePath, 'img')
+				'img': path.join(config.sourcePath, 'img'),
 			},
 		},
 		resolveLoader: {
@@ -95,7 +95,7 @@ function getConfig(env) {
 					loader: 'url',
 					query: {
 						limit: 3000,
-						name: path.join(config.destPath, 'img/[name].[hash:base64:7].[ext]')
+						name: 'img/[name].[hash:base64:7].[ext]'
 					}
 				},
 				{
@@ -103,7 +103,7 @@ function getConfig(env) {
 					loader: 'url',
 					query: {
 						limit: 3000,
-						name: path.join(config.destPath, 'fonts/[name].[hash:base64:7].[ext]')
+						name: 'fonts/[name].[hash:base64:7].[ext]'
 					}
 				}
 			]
@@ -255,7 +255,7 @@ function getConfig(env) {
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			// extract css into its own file
 			new ExtractTextPlugin({
-				filename: path.join(config.destPath, 'css/[name].[contenthash:7].css'),
+				filename: 'css/[name].[contenthash:7].css',
 				allChunks: true,
 			}),
 			// generate dist index.html with correct asset hash for caching.
@@ -283,7 +283,7 @@ function getConfig(env) {
 						module.resource &&
 						/\.js$/.test(module.resource) &&
 						module.resource.indexOf(
-							path.join(__dirname, '../node_modules')
+							path.join(cwd, 'node_modules')
 						) === 0
 					)
 				}
