@@ -38,6 +38,7 @@ function devServer(config) {
 
 	var devMiddleware = webpackDevMiddleware(compiler, {
 		publicPath: config.publicUrl || config.publicPath,
+		noInfo: true,
 		stats: {
 			colors: true,
 			chunks: false
