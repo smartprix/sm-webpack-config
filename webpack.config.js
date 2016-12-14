@@ -58,7 +58,7 @@ function getConfig(env) {
 			filename: 'js/[name].js'
 		},
 		resolve: {
-			extensions: ['', '.js', '.vue'],
+			extensions: ['.js', '.json', '.jsx', '.vue'],
 			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 			alias: {
 				'src': path.join(config.sourcePath, 'js'),
@@ -73,51 +73,60 @@ function getConfig(env) {
 			modules: [path.join(__dirname, 'node_modules'), path.join(cwd, 'node_modules')],
 		},
 		module: {
-			preLoaders: [
-			],
-			loaders: [
+			rules: [
 				{
 					test: /\.vue$/,
-					loader: 'vue'
+					loader: 'vue-loader',
+					options: {
+						loaders: utils.cssLoaders({
+							sourceMap: config.sourceMap,
+							extract: isProduction ? true : false,
+						}),
+						postcss: [
+							precss(),
+							cssnext(),
+						],
+						autoprefixer: false,
+					},
 				},
 				{
-					test: /\.js$/,
-					loader: 'babel',
+					test: /\.jsx?$/,
+					loader: 'babel-loader',
 					include: config.sourcePath,
-					exclude: /node_modules/
+					exclude: /node_modules/,
+					options: {
+						presets: [
+							[
+								require.resolve("babel-preset-es2015"),
+								{ "loose": true, "modules": false }
+							],
+						],
+						plugins: [
+							require.resolve("babel-plugin-transform-vue-jsx"),
+						],
+					},
 				},
 				{
 					test: /\.json$/,
-					loader: 'json'
+					loader: 'json-loader',
 				},
 				{
 					test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-					loader: 'url',
+					loader: 'url-loader',
 					query: {
 						limit: 3000,
-						name: 'img/[name].[hash:base64:7].[ext]'
-					}
+						name: 'img/[name].[hash:base64:7].[ext]',
+					},
 				},
 				{
 					test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-					loader: 'url',
+					loader: 'url-loader',
 					query: {
 						limit: 3000,
-						name: 'fonts/[name].[hash:base64:7].[ext]'
-					}
+						name: 'fonts/[name].[hash:base64:7].[ext]',
+					},
 				}
 			]
-		},
-		babel: {
-			presets: [
-				[
-					require.resolve("babel-preset-es2015"),
-					{ "loose": true, "modules": false }
-				],
-			],
-			plugins: [
-				require.resolve("babel-plugin-transform-vue-jsx"),
-			],
 		},
 		node: {
 			console: false,
@@ -128,32 +137,19 @@ function getConfig(env) {
 			__dirname: "mock",
 			setImmediate: false,
 		},
-		eslint: {
-			formatter: require('eslint-friendly-formatter')
-		},
-		postcss: [
-			precss(),
-			cssnext(),
-		],
-		vue: {
-			loaders: utils.cssLoaders({
-				sourceMap: config.sourceMap
-			}),
-			postcss: [
-				precss(),
-				cssnext(),
-			],
-			autoprefixer: false
-		},
 		plugins: []
 	}
 
 	if (config.eslint) {
-		baseConfig.module.preLoaders.push({
+		baseConfig.module.rules.push({
 			test: /\.(vue|js)$/,
-			loader: 'eslint',
+			loader: 'eslint-loader',
 			include: config.sourcePath,
-			exclude: /node_modules/
+			exclude: /node_modules/,
+			enforce: 'pre',
+			options: {
+				formatter: require('eslint-friendly-formatter'),
+			}
 		});
 	}
 
@@ -187,7 +183,7 @@ function getConfig(env) {
 				inline: true,
 			},
 			module: {
-				loaders: utils.styleLoaders({ sourceMap: config.sourceMap })
+				rules: utils.styleLoaders({ sourceMap: config.sourceMap })
 			},
 			// eval-source-map is faster for development
 			devtool: config.sourceMap ? '#eval-source-map' : false,
@@ -225,19 +221,13 @@ function getConfig(env) {
 	// Production Config
 	return merge(baseConfig, {
 		module: {
-			loaders: utils.styleLoaders({ sourceMap: config.sourceMap, extract: true })
+			rules: utils.styleLoaders({ sourceMap: config.sourceMap, extract: true })
 		},
 
 		devtool: config.sourceMap ? '#source-map' : false,
 		output: {
 			filename: 'js/[name].[chunkhash:7].js',
 			chunkFilename: 'js/[id].[chunkhash:7].js',
-		},
-		vue: {
-			loaders: utils.cssLoaders({
-				sourceMap: config.sourceMap,
-				extract: true
-			})
 		},
 		plugins: [
 			// http://vuejs.github.io/vue-loader/workflow/production.html
