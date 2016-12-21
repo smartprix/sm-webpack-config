@@ -4,6 +4,7 @@ var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var gutil = require("gulp-util");
+var opn = require("opn");
 const WebpackDevServer = require('./dev-server');
 const merge = require('webpack-merge')
 
@@ -20,6 +21,7 @@ const configDev = {
 	devServerPort: 3001,
 	appPort: 3000,
 	eslint: true,
+	openBrowser: true,
 	entry: {
 		app: 'js/index.js',
 	},
@@ -350,7 +352,13 @@ function runDevServer({config, webpackConfig}) {
 		WebpackDevServer(devServerConfig)
 			.listen(devConfig.devServerPort, "0.0.0.0", function(err) {
 				if(err) throw new gutil.PluginError("webpack-dev-server", err);
-				gutil.log("[webpack-dev-server]", "http://localhost:" + devConfig.devServerPort);
+
+				var url = "http://localhost:" + devConfig.devServerPort;
+				gutil.log("[webpack-dev-server]", url);
+
+				if (devConfig.openBrowser) {
+					opn(url);
+				}
 
 				resolve();
 			});

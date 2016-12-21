@@ -44,6 +44,7 @@
     "json-loader": "0.5.4",
     "lodash": "4.17.2",
     "node-sass": "4.1.1",
+    "opn": "^4.0.2",
     "postcss": "5.2.6",
     "postcss-cssnext": "2.9.0",
     "precss": "1.4.0",
