@@ -137,6 +137,7 @@ const config = {
 	eslint: true,
 
 	// the paths to proxy on the dev-server
+	// only valid while running dev server, otherwise ignored
 	proxy: {
 		'/api': 'http://localhost:3000',
 		'/static': 'http://localhost:3000',
@@ -147,5 +148,9 @@ const config = {
 	entry: {
 		app: 'js/index.js',
 	},
+
+	// whether to open the browser automatically
+	// only valid while running dev server, otherwise ignored
+	openBrowser: true,
 };
 ```
