@@ -41,14 +41,14 @@ exports.cssLoaders = function (options) {
 
 // Generate loaders for standalone style files (outside of .vue)
 exports.styleLoaders = function (options) {
-	var output = []
+	var output = {};
 	var loaders = exports.cssLoaders(options)
 	for (var extension in loaders) {
 		var loader = loaders[extension]
-		output.push({
+		output[extension] = {
 			test: new RegExp('\\.' + extension + '$'),
 			loader: loader
-		})
+		};
 	}
 	return output
 }

@@ -47,6 +47,11 @@ function getConfig(env) {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
+	const cssLoaders = utils.cssLoaders({
+		sourceMap: config.sourceMap,
+		extract: isProduction ? true : false,
+	});
+
 	const baseConfig = {
 		entry: entry,
 		devServer: {
@@ -78,10 +83,7 @@ function getConfig(env) {
 					test: /\.vue$/,
 					loader: 'vue-loader',
 					options: {
-						loaders: utils.cssLoaders({
-							sourceMap: config.sourceMap,
-							extract: isProduction ? true : false,
-						}),
+						loaders: _.values(cssLoaders),
 						postcss: [
 							precss(),
 							cssnext(),
@@ -139,6 +141,10 @@ function getConfig(env) {
 		},
 		plugins: []
 	}
+
+	baseConfig.module.rules.push(cssLoaders.css);
+	baseConfig.module.rules.push(cssLoaders.sass);
+	baseConfig.module.rules.push(cssLoaders.scss);
 
 	if (config.eslint) {
 		baseConfig.module.rules.push({
