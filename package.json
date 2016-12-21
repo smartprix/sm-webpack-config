@@ -1,6 +1,6 @@
 {
   "name": "sm-webpack-config",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Webpack Configuration With Vue, Babel & Hot Reloading",
   "main": "webpack.config.js",
   "repository": {
