@@ -31,13 +31,21 @@ const configProd = _.assign({}, configDev, {
 	publicUrl: '/static/dist',
 });
 
-function getConfig(env) {
+// object is {env, config, webpackConfig}
+// env can be developement or production
+// config gets merged into our configuration (configDev or configProd)
+// webpackConfig gets merged into final webpack config
+function getWebpackConfig(object) {
 	const cwd = process.cwd();
-
-	env = env || process.env.NODE_ENV;
+	const env = object.env || process.env.NODE_ENV || 'development';
 
 	const isProduction = env === 'production';
-	const config = isProduction ? configProd : configDev;
+	let config = isProduction ? configProd : configDev;
+	if (object.config) {
+		config = _.assign({}, config, object.config);
+	}
+
+	const webpackConfig = object.webpackConfig || {};
 
 	config.sourcePath = path.join(cwd, config.sourcePath);
 	config.destPath = path.join(cwd, config.destPath);
@@ -142,10 +150,6 @@ function getConfig(env) {
 		plugins: []
 	}
 
-	baseConfig.module.rules.push(cssLoaders.css);
-	baseConfig.module.rules.push(cssLoaders.sass);
-	baseConfig.module.rules.push(cssLoaders.scss);
-
 	if (config.eslint) {
 		baseConfig.module.rules.push({
 			test: /\.(vue|js)$/,
@@ -189,7 +193,7 @@ function getConfig(env) {
 				inline: true,
 			},
 			module: {
-				rules: utils.styleLoaders({ sourceMap: config.sourceMap })
+				rules: _.values(cssLoaders),
 			},
 			// eval-source-map is faster for development
 			devtool: config.sourceMap ? '#eval-source-map' : false,
@@ -221,13 +225,13 @@ function getConfig(env) {
 					inject: true
 				})
 			]
-		})
+		}, webpackConfig);
 	}
 
 	// Production Config
 	return merge(baseConfig, {
 		module: {
-			rules: utils.styleLoaders({ sourceMap: config.sourceMap, extract: true })
+			rules: _.values(cssLoaders),
 		},
 
 		devtool: config.sourceMap ? '#source-map' : false,
@@ -291,83 +295,74 @@ function getConfig(env) {
 				chunks: ['vendor']
 			})
 		]
-	})
+	}, webpackConfig);
 }
 
-function getProdConfig() {
-	return getConfig('production');
+function getProdConfig(config, webpackConfig) {
+	return getConfig({env: 'production', config, webpackConfig});
 }
 
-function getDevConfig() {
-	return getConfig('development');
+function getDevConfig(config, webpackConfig) {
+	return getConfig({env: 'development', config, webpackConfig});
 }
 
-function setProdConfig() {
-	return _.assign(configProd, object);
-}
+function runWebpack({env, config, webpackConfig}) {
+	return new Promise(function(resolve, reject) {
+		const finalWebpackConfig = getWebpackConfig({env, config, webpackConfig});
 
-function setDevConfig() {
-	return _.assign(configDev, object);
-}
+		// run webpack
+		webpack(finalWebpackConfig, function(err, stats) {
+			if(err) throw new gutil.PluginError('webpack:build', err);
+			gutil.log('[webpack:build]', stats.toString({
+				colors: true
+			}));
 
-function runWebpack(env, callback) {
-	if (_.isFunction(env)) {
-		callback = env;
-		env = undefined;
-	}
-
-	const webpackConfig = getConfig(env);
-
-	// run webpack
-	webpack(webpackConfig, function(err, stats) {
-		if(err) throw new gutil.PluginError('webpack:build', err);
-		gutil.log('[webpack:build]', stats.toString({
-			colors: true
-		}));
-
-		if (callback) {
-			callback();
-		}
+			resolve();
+		});
 	});
 }
 
-function runDevWebpack(callback) {
-	runWebpack('development', callback);
+function runDevWebpack(config, webpackConfig) {
+	return runWebpack({env: 'development', config, webpackConfig});
 }
 
-function runProdWebpack(callback) {
-	runWebpack('production', callback);
+function runProdWebpack(config, webpackConfig) {
+	return runWebpack({env: 'production', config, webpackConfig});
 }
 
-function runDevServer(callback) {
-	const webpackConfig = getConfig('development');
-	const devServerConfig = {
-		webpackConfig,
-		publicUrl: configDev.publicUrl,
-		proxy: {
-			"/api": "http://localhost:" + configDev.appPort,
-			"/static": "http://localhost:" + configDev.appPort,
-		},
-	};
+function runDevServer() {
+	return new Promise(function(resolve, reject) {
+		const finalWebpackConfig = getWebpackConfig({env: 'development', config, webpackConfig});
+		const devConfig = _.assign({}, configDev, config);
+		const devServerConfig = {
+			webpackConfig: finalWebpackConfig,
+			publicUrl: devConfig.publicUrl,
+			proxy: {
+				"/api": "http://localhost:" + devConfig.appPort,
+				"/static": "http://localhost:" + devConfig.appPort,
+				"/uploads": "http://localhost:" + devConfig.appPort,
+			},
+		};
 
-	if (configDev.proxy) {
-		devServerConfig['proxy'] = configDev.proxy;
-	}
+		if (configDev.proxy) {
+			devServerConfig['proxy'] = devConfig.proxy;
+		}
 
-	// Start a webpack-dev-server
-	WebpackDevServer(devServerConfig)
-		.listen(configDev.devServerPort, "0.0.0.0", function(err) {
-			if(err) throw new gutil.PluginError("webpack-dev-server", err);
-			gutil.log("[webpack-dev-server]", "http://localhost:" + configDev.devServerPort);
-		});
+		// Start a webpack-dev-server
+		WebpackDevServer(devServerConfig)
+			.listen(devConfig.devServerPort, "0.0.0.0", function(err) {
+				if(err) throw new gutil.PluginError("webpack-dev-server", err);
+				gutil.log("[webpack-dev-server]", "http://localhost:" + devConfig.devServerPort);
+
+				resolve();
+			});
+	});
 }
 
 module.exports = {
-	getConfig,
+	getWebpackConfig,
 	getProdConfig,
 	getDevConfig,
-	setProdConfig,
-	setDevConfig,
 	runWebpack,
 	runDevWebpack,
 	runProdWebpack,

@@ -12,13 +12,14 @@ Webpack configuration with following features:
 
 Install this package
 ```bash
-npm install sm-webpack-config --save
+npm install sm-webpack-config --save-dev
 ```
 
-Set Configuration [Optional]
+## How to Use
 ```js
 const smWebpack = require('sm-webpack-config');
 
+// Set Configuration [Optional]
 const config = {
 	sourcePath: 'res',
 	destPath: 'static/dist',
@@ -28,20 +29,33 @@ const config = {
 	appPort: 3000,
 };
 
-// Set Development and Production Configuration
-smWebpack.setDevConfig(config);
-smWebpack.setProdConfig(config);
-```
-
-Run Webpack
-```js
 // Run Developement Server With Hot Reloading
-smWebpack.runDevServer();
+smWebpack.runDevServer({config});
 
 // Build For Production
-smWebpack.runProdWebpack();
+smWebpack.runProdWebpack({config});
+
+// If you want to go advanced and override some webpack configuration
+const webpackConfig = {
+	plugins: [
+		new webpack.optimize.UglifyJsPlugin({
+			compress: {
+				warnings: true
+			}
+		}),
+	],
+};
+
+// Run Developement Server With Hot Reloading
+smWebpack.runDevServer({config, webpackConfig});
+
+// Build For Production
+smWebpack.runProdWebpack({config, webpackConfig});
+
+// NOTE: Both config & webpackConfig are optional
 ```
 
+## Using with Gulp
 You can also use it in gulp using the following gulpfile
 ```js
 const smWebpack = require('sm-webpack-config');
@@ -49,12 +63,12 @@ const gulp = require('gulp');
 
 // The development server (the recommended option for development)
 gulp.task('default', function(callback) {
-	smWebpack.runDevServer(callback);
+	smWebpack.runDevServer().then(callback);
 });
 
 // Build files for production
 gulp.task('build', function(callback) {
-	smWebpack.runProdWebpack(callback);
+	smWebpack.runProdWebpack().then(callback);
 });
 ```
 
@@ -107,6 +121,7 @@ const config = {
 	proxy: {
 		'/api': 'http://localhost:3000',
 		'/static': 'http://localhost:3000',
+		'/uploads': 'http://localhost:3000',
 	},
 
 	// entry points for webpack (relative to sourcePath)
