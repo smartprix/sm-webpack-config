@@ -83,6 +83,7 @@ Now you can use `gulp` to run dev-server and `gulp build` to build for productio
   * css / scss in `css`
   * images in `img`
   * other assests in `assests`
+    * eg. fonts can be kept in `assests/fonts`
   * `index.html` as entry point (no need to include js/css, they will automatically be injected by webpack).
 
 * all the compiled code will be put in `static/dist`
@@ -91,6 +92,24 @@ Now you can use `gulp` to run dev-server and `gulp build` to build for productio
 * api endpoints should start with `/api`
 * Keep your server running at port `3000`
 * Dev server will run at port `3001`
+
+## Webpack Aliases
+The following aliases are defined
+```js
+// by default config.sourcePath points to `res`, you can override it in your config
+{
+	'res': config.sourcePath,
+	'js': path.join(config.sourcePath, 'js'),
+	'assets': path.join(config.sourcePath, 'assets'),
+	'components': path.join(config.sourcePath, 'js', 'components'),
+	'css': path.join(config.sourcePath, 'css'),
+	'img': path.join(config.sourcePath, 'img'),
+}
+```
+
+So you can write `import Hello from 'components/Hello.vue'` from anywhere
+If you want to use images in your vue templates use them as `~img/logo.png` (append a ~)
+See https://github.com/vuejs/vue-loader/issues/193
 
 ## Configuration Options
 ```js

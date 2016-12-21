@@ -69,9 +69,9 @@ function getWebpackConfig(object) {
 			extensions: ['.js', '.json', '.jsx', '.vue'],
 			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 			alias: {
-				'src': path.join(config.sourcePath, 'js'),
+				'res': config.sourcePath,
 				'js': path.join(config.sourcePath, 'js'),
-				'assets': path.join(config.sourcePath),
+				'assets': path.join(config.sourcePath, 'assets'),
 				'components': path.join(config.sourcePath, 'js', 'components'),
 				'css': path.join(config.sourcePath, 'css'),
 				'img': path.join(config.sourcePath, 'img'),
