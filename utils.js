@@ -44,11 +44,11 @@ exports.styleLoaders = function (options) {
 	var output = {};
 	var loaders = exports.cssLoaders(options)
 	for (var extension in loaders) {
-		var loader = loaders[extension]
+		var loader = loaders[extension];
 		output[extension] = {
 			test: new RegExp('\\.' + extension + '$'),
 			loader: loader
 		};
 	}
-	return output
+	return output;
 }

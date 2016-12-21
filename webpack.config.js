@@ -55,11 +55,6 @@ function getWebpackConfig(object) {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
-	const cssLoaders = utils.cssLoaders({
-		sourceMap: config.sourceMap,
-		extract: isProduction ? true : false,
-	});
-
 	const baseConfig = {
 		entry: entry,
 		devServer: {
@@ -91,7 +86,10 @@ function getWebpackConfig(object) {
 					test: /\.vue$/,
 					loader: 'vue-loader',
 					options: {
-						loaders: _.values(cssLoaders),
+						loaders: utils.cssLoaders({
+							sourceMap: config.sourceMap,
+							extract: isProduction ? true : false,
+						}),
 						postcss: [
 							precss(),
 							cssnext(),
@@ -193,7 +191,7 @@ function getWebpackConfig(object) {
 				inline: true,
 			},
 			module: {
-				rules: _.values(cssLoaders),
+				rules: _.values(utils.styleLoaders({sourceMap: config.sourceMap})),
 			},
 			// eval-source-map is faster for development
 			devtool: config.sourceMap ? '#eval-source-map' : false,
@@ -231,7 +229,7 @@ function getWebpackConfig(object) {
 	// Production Config
 	return merge(baseConfig, {
 		module: {
-			rules: _.values(cssLoaders),
+			rules: _.values(utils.styleLoaders({sourceMap: config.sourceMap, extract: true})),
 		},
 
 		devtool: config.sourceMap ? '#source-map' : false,
