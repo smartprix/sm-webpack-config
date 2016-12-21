@@ -298,11 +298,11 @@ function getWebpackConfig(object) {
 	}, webpackConfig);
 }
 
-function getProdConfig(config, webpackConfig) {
+function getProdConfig({config, webpackConfig}) {
 	return getConfig({env: 'production', config, webpackConfig});
 }
 
-function getDevConfig(config, webpackConfig) {
+function getDevConfig({config, webpackConfig}) {
 	return getConfig({env: 'development', config, webpackConfig});
 }
 
@@ -322,15 +322,15 @@ function runWebpack({env, config, webpackConfig}) {
 	});
 }
 
-function runDevWebpack(config, webpackConfig) {
+function runDevWebpack({config, webpackConfig}) {
 	return runWebpack({env: 'development', config, webpackConfig});
 }
 
-function runProdWebpack(config, webpackConfig) {
+function runProdWebpack({config, webpackConfig}) {
 	return runWebpack({env: 'production', config, webpackConfig});
 }
 
-function runDevServer() {
+function runDevServer({config, webpackConfig}) {
 	return new Promise(function(resolve, reject) {
 		const finalWebpackConfig = getWebpackConfig({env: 'development', config, webpackConfig});
 		const devConfig = _.assign({}, configDev, config);
