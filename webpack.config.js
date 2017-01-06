@@ -6,11 +6,13 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var FriendlyErrors = require('friendly-errors-webpack-plugin')
 var gutil = require("gulp-util");
 var opn = require("opn");
-const merge = require('webpack-merge')
+const merge = require('webpack-merge');
 
 const WebpackDevServer = require('./dev-server');
 const utils = require('./utils');
 const postcssOptions = require('./postcss.config.js');
+
+console.log("Hello");
 
 const configDev = {
 	sourcePath: 'res',
@@ -24,7 +26,7 @@ const configDev = {
 	entry: {
 		app: 'js/index.js',
 	},
-}
+};
 
 const configProd = _.assign({}, configDev, {
 	sourceMap: false,
@@ -58,9 +60,6 @@ function getWebpackConfig(object) {
 
 	const baseConfig = {
 		entry: entry,
-		devServer: {
-			inline: true,
-		},
 		output: {
 			path: config.destPath,
 			publicPath: config.publicUrl,
@@ -160,7 +159,7 @@ function getWebpackConfig(object) {
 	}
 
 	if (config.gzip) {
-		var CompressionWebpackPlugin = require('compression-webpack-plugin')
+		var CompressionWebpackPlugin = require('compression-webpack-plugin');
 
 		baseConfig.plugins.push(
 			new CompressionWebpackPlugin({
@@ -174,7 +173,7 @@ function getWebpackConfig(object) {
 				threshold: 10240,
 				minRatio: 0.8
 			})
-		)
+		);
 	}
 
 	if (!isProduction) {
@@ -187,6 +186,9 @@ function getWebpackConfig(object) {
 		return merge(baseConfig, {
 			devServer: {
 				inline: true,
+			},
+			performance: {
+				hints: false,
 			},
 			module: {
 				rules: _.values(utils.styleLoaders({sourceMap: config.sourceMap})),
