@@ -1,21 +1,21 @@
 var path = require('path')
-var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 exports.cssLoaders = function (options) {
-	options = options || {}
+	options = options || {};
 	// generate loader string to be used with extract text plugin
 	function generateLoaders (loaders) {
 		var sourceLoader = loaders.map(function (loader) {
-			var extraParamChar
+			var extraParamChar;
 			if (/\?/.test(loader)) {
-				loader = loader.replace(/\?/, '-loader?')
-				extraParamChar = '&'
+				loader = loader.replace(/\?/, '-loader?');
+				extraParamChar = '&';
 			} else {
-				loader = loader + '-loader'
-				extraParamChar = '?'
+				loader = loader + '-loader';
+				extraParamChar = '?';
 			}
-			return loader + (options.sourceMap ? extraParamChar + 'sourceMap' : '')
-		}).join('!')
+			return loader + (options.sourceMap ? extraParamChar + 'sourceMap' : '');
+		}).join('!');
 
 		if (options.extract) {
 			return ExtractTextPlugin.extract({
@@ -23,7 +23,7 @@ exports.cssLoaders = function (options) {
 				loader: sourceLoader,
 			});
 		} else {
-			return ['vue-style-loader', sourceLoader].join('!')
+			return ['vue-style-loader', sourceLoader].join('!');
 		}
 	}
 
@@ -31,6 +31,7 @@ exports.cssLoaders = function (options) {
 	return {
 		css: generateLoaders(['css']),
 		postcss: generateLoaders(['css']),
+		_postcss: generateLoaders(['css', 'postcss?config=' + __dirname]),
 		less: generateLoaders(['css', 'less']),
 		sass: generateLoaders(['css', 'sass?indentedSyntax']),
 		scss: generateLoaders(['css', 'sass']),
@@ -42,9 +43,12 @@ exports.cssLoaders = function (options) {
 // Generate loaders for standalone style files (outside of .vue)
 exports.styleLoaders = function (options) {
 	var output = {};
-	var loaders = exports.cssLoaders(options)
+	var loaders = exports.cssLoaders(options);
 	for (var extension in loaders) {
 		var loader = loaders[extension];
+		if (extension === 'css' || extension === 'postcss') {
+			loader = loaders['_postcss'];
+		}
 		output[extension] = {
 			test: new RegExp('\\.' + extension + '$'),
 			loader: loader

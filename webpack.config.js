@@ -3,15 +3,14 @@ var path = require('path');
 var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var FriendlyErrors = require('friendly-errors-webpack-plugin')
 var gutil = require("gulp-util");
 var opn = require("opn");
-const WebpackDevServer = require('./dev-server');
 const merge = require('webpack-merge')
 
-const precss = require('precss');
-const cssnext = require('postcss-cssnext');
-
-var utils = require('./utils');
+const WebpackDevServer = require('./dev-server');
+const utils = require('./utils');
+const postcssOptions = require('./postcss.config.js');
 
 const configDev = {
 	sourcePath: 'res',
@@ -68,7 +67,7 @@ function getWebpackConfig(object) {
 			filename: 'js/[name].js'
 		},
 		resolve: {
-			extensions: ['.js', '.json', '.jsx', '.vue'],
+			extensions: ['.js', '.jsx', '.vue', '.json'],
 			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 			alias: {
 				'res': config.sourcePath,
@@ -92,10 +91,7 @@ function getWebpackConfig(object) {
 							sourceMap: config.sourceMap,
 							extract: isProduction ? true : false,
 						}),
-						postcss: [
-							precss(),
-							cssnext(),
-						],
+						postcss: postcssOptions,
 						autoprefixer: false,
 					},
 				},
@@ -222,8 +218,11 @@ function getWebpackConfig(object) {
 				new HtmlWebpackPlugin({
 					filename: 'index.html',
 					template: path.join(config.sourcePath, 'index.html'),
-					inject: true
-				})
+					inject: true,
+				}),
+
+				// Friendly Errors
+				new FriendlyErrors(),
 			]
 		}, webpackConfig);
 	}
@@ -348,13 +347,12 @@ function runDevServer({config, webpackConfig}) {
 			devServerConfig['proxy'] = devConfig.proxy;
 		}
 
+		const url = "http://localhost:" + devConfig.devServerPort;
+
 		// Start a webpack-dev-server
-		WebpackDevServer(devServerConfig)
+		WebpackDevServer(devServerConfig, () => gutil.log("[webpack-dev-server]", url))
 			.listen(devConfig.devServerPort, "0.0.0.0", function(err) {
 				if(err) throw new gutil.PluginError("webpack-dev-server", err);
-
-				var url = "http://localhost:" + devConfig.devServerPort;
-				gutil.log("[webpack-dev-server]", url);
 
 				if (devConfig.openBrowser) {
 					opn(url);

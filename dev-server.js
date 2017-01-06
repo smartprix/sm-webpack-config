@@ -6,7 +6,7 @@ var webpackDevMiddleware = require('webpack-dev-middleware');
 var webpackHotMiddleware = require('webpack-hot-middleware');
 var historyApiFallback = require('connect-history-api-fallback');
 
-function devServer(config) {
+function devServer(config, callback) {
 	// default port where dev server listens for incoming traffic
 	var port = config.port || 3001;
 
@@ -41,11 +41,13 @@ function devServer(config) {
 		noInfo: true,
 		stats: {
 			colors: true,
-			chunks: false
+			chunks: false,
 		},
 	})
 
-	var hotMiddleware = webpackHotMiddleware(compiler);
+	var hotMiddleware = webpackHotMiddleware(compiler, {
+		log: () => {}
+	});
 
 	// force page reload when html-webpack-plugin template changes
 	compiler.plugin('compilation', function (compilation) {
@@ -64,6 +66,11 @@ function devServer(config) {
 	// enable hot-reload and state-preserving
 	// compilation error display
 	app.use(hotMiddleware);
+
+	// execute callback after the bundle is valid
+	if (callback) {
+		devMiddleware.waitUntilValid(callback);
+	}
 
 	// serve pure static assets
 	// var staticPath = path.posix.join(config.dev.assetsPublicPath, config.dev.assetsSubDirectory)
