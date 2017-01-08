@@ -58,6 +58,24 @@ function getWebpackConfig(object) {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
+	const babelOptions = {
+		presets: [
+			[
+				"babel-preset-es2015",
+				{ "loose": true, "modules": false }
+			],
+		],
+		plugins: [
+			"babel-plugin-transform-vue-jsx",
+		],
+	};
+
+	const vueLoaders = utils.cssLoaders({
+		sourceMap: config.sourceMap,
+		extract: isProduction ? true : false,
+	});
+	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
+
 	const baseConfig = {
 		entry: entry,
 		output: {
@@ -86,10 +104,7 @@ function getWebpackConfig(object) {
 					test: /\.vue$/,
 					loader: 'vue-loader',
 					options: {
-						loaders: utils.cssLoaders({
-							sourceMap: config.sourceMap,
-							extract: isProduction ? true : false,
-						}),
+						loaders: vueLoaders,
 						postcss: postcssOptions,
 						autoprefixer: false,
 					},
@@ -99,17 +114,7 @@ function getWebpackConfig(object) {
 					loader: 'babel-loader',
 					include: config.sourcePath,
 					exclude: /node_modules/,
-					options: {
-						presets: [
-							[
-								require.resolve("babel-preset-es2015"),
-								{ "loose": true, "modules": false }
-							],
-						],
-						plugins: [
-							require.resolve("babel-plugin-transform-vue-jsx"),
-						],
-					},
+					options: babelOptions,
 				},
 				{
 					test: /\.json$/,
