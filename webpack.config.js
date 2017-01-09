@@ -58,15 +58,20 @@ function getWebpackConfig(object) {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
+	// polyfills required, object.assign, promise
 	const babelOptions = {
 		presets: [
 			[
-				"babel-preset-es2015",
+				require.resolve("babel-preset-es2015"),
 				{ "loose": true, "modules": false }
 			],
+			require.resolve("babel-preset-es2016"),
+			require.resolve("babel-preset-es2017"),
+			require.resolve("babel-preset-stage-3"),
 		],
 		plugins: [
-			"babel-plugin-transform-vue-jsx",
+			require.resolve("babel-plugin-transform-vue-jsx"),
+			require.resolve("babel-plugin-transform-class-properties"),
 		],
 	};
 
