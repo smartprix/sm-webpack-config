@@ -265,7 +265,7 @@ function getWebpackConfig(object) {
 				// https://github.com/glenjamin/webpack-hot-middleware#installation--usage
 				new webpack.optimize.OccurrenceOrderPlugin(),
 				new webpack.HotModuleReplacementPlugin(),
-				new webpack.NoErrorsPlugin(),
+				new webpack.NoEmitOnErrorsPlugin(),
 
 				new webpack.ProvidePlugin({
 					// Automtically detect jQuery and $ as free var in modules
@@ -280,15 +280,15 @@ function getWebpackConfig(object) {
 			],
 		};
 
-		if (!config.library && config.entryHtml) {
-			devWebpackConfig.plugins.concat([
+		if (!config.library, config.entryHtml) {
+			devWebpackConfig.plugins.push(
 				// https://github.com/ampedandwired/html-webpack-plugin
 				new HtmlWebpackPlugin({
 					filename: config.entryHtml,
 					template: path.join(config.sourcePath, config.entryHtml),
 					inject: true,
-				}),
-			]);
+				})
+			);
 		}
 
 		// Developement Config
@@ -317,7 +317,7 @@ function getWebpackConfig(object) {
 
 	if (!config.library) {
 		if (config.entryHtml) {
-			prodWebpackConfig.plugins.concat([
+			prodWebpackConfig.plugins.push(
 				// generate dist index.html with correct asset hash for caching.
 				// you can customize output by editing /index.html
 				// see https://github.com/ampedandwired/html-webpack-plugin
@@ -333,11 +333,11 @@ function getWebpackConfig(object) {
 					},
 					// necessary to consistently work with multiple chunks via CommonsChunkPlugin
 					chunksSortMode: 'dependency'
-				}),
-			]);
+				})
+			);
 		}
 
-		prodWebpackConfig.plugins.concat([
+		prodWebpackConfig.plugins = prodWebpackConfig.plugins.concat([
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			// extract css into its own file
 			new ExtractTextPlugin({
