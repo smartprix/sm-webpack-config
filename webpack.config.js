@@ -12,8 +12,6 @@ const WebpackDevServer = require('./dev-server');
 const utils = require('./utils');
 const postcssOptions = require('./postcss.config.js');
 
-console.log("Hello");
-
 const configDev = {
 	sourcePath: 'res',
 	destPath: '.',
@@ -26,20 +24,52 @@ const configDev = {
 	entry: {
 		app: 'js/index.js',
 	},
+	entryHtml: 'index.html',
+	library: false,
+	uglify: false,
+	rollup: false,
 };
 
 const configProd = _.assign({}, configDev, {
 	sourceMap: false,
 	destPath: 'static/dist',
 	publicUrl: '/static/dist',
+	uglify: true,
 });
+
+const configRollup = {
+	entry: 'src/index.js',
+	dest: 'dest/index.js',
+	library: 'lib',
+	libraryFormat: 'umd',
+	uglify: false,
+	sourceMap: false,
+};
+
+const cwd = process.cwd();
+
+// polyfills required, object.assign, promise
+const babelOptions = {
+	presets: [
+		[
+			require.resolve("babel-preset-es2015"),
+			{ "loose": true, "modules": false }
+		],
+		require.resolve("babel-preset-es2016"),
+		require.resolve("babel-preset-es2017"),
+		require.resolve("babel-preset-stage-3"),
+	],
+	plugins: [
+		require.resolve("babel-plugin-transform-vue-jsx"),
+		require.resolve("babel-plugin-transform-class-properties"),
+	],
+};
 
 // object is {env, config, webpackConfig}
 // env can be developement or production
 // config gets merged into our configuration (configDev or configProd)
 // webpackConfig gets merged into final webpack config
 function getWebpackConfig(object) {
-	const cwd = process.cwd();
 	const env = object.env || process.env.NODE_ENV || 'development';
 
 	const isProduction = env === 'production';
@@ -58,35 +88,45 @@ function getWebpackConfig(object) {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
-	// polyfills required, object.assign, promise
-	const babelOptions = {
-		presets: [
-			[
-				require.resolve("babel-preset-es2015"),
-				{ "loose": true, "modules": false }
-			],
-			require.resolve("babel-preset-es2016"),
-			require.resolve("babel-preset-es2017"),
-			require.resolve("babel-preset-stage-3"),
-		],
-		plugins: [
-			require.resolve("babel-plugin-transform-vue-jsx"),
-			require.resolve("babel-plugin-transform-class-properties"),
-		],
-	};
-
 	const vueLoaders = utils.cssLoaders({
 		sourceMap: config.sourceMap,
 		extract: isProduction ? true : false,
 	});
 	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
 
+	let jsLoader = {
+		test: /\.jsx?$/,
+		loader: 'babel-loader',
+		include: config.sourcePath,
+		exclude: /node_modules/,
+		options: babelOptions,
+	};
+
+	if (config.rollup) {
+		jsLoader = {
+			test: /\.jsx?$/,
+			loader: 'rollup-loader',
+			include: config.sourcePath,
+			exclude: [/node_modules/],
+			options: {
+				plugins: [
+					require('rollup-plugin-babel')({
+						exclude: 'node_modules/**',
+						babelrc: false,
+						presets: babelOptions.presets,
+						plugins: babelOptions.plugins,
+					}),
+				],
+			},
+		};
+	}
+
 	const baseConfig = {
 		entry: entry,
 		output: {
 			path: config.destPath,
 			publicPath: config.publicUrl,
-			filename: 'js/[name].js'
+			filename: config.library ? '[name].js' : 'js/[name].js'
 		},
 		resolve: {
 			extensions: ['.js', '.jsx', '.vue', '.json'],
@@ -114,13 +154,7 @@ function getWebpackConfig(object) {
 						autoprefixer: false,
 					},
 				},
-				{
-					test: /\.jsx?$/,
-					loader: 'babel-loader',
-					include: config.sourcePath,
-					exclude: /node_modules/,
-					options: babelOptions,
-				},
+				jsLoader,
 				{
 					test: /\.json$/,
 					loader: 'json-loader',
@@ -155,6 +189,12 @@ function getWebpackConfig(object) {
 		plugins: []
 	}
 
+	if (config.library) {
+		baseConfig.output.libraryTarget = config.libraryFormat || "umd";
+		baseConfig.output.umdNamedDefine = true;
+		baseConfig.output.library = config.library === true ? 'Lib' : config.library;
+	}
+
 	if (config.eslint) {
 		baseConfig.module.rules.push({
 			test: /\.(vue|js)$/,
@@ -166,6 +206,16 @@ function getWebpackConfig(object) {
 				formatter: require('eslint-friendly-formatter'),
 			}
 		});
+	}
+
+	if (config.uglify) {
+		baseConfig.plugins.push(
+			new webpack.optimize.UglifyJsPlugin({
+				compress: {
+					warnings: false
+				}
+			})
+		);
 	}
 
 	if (config.gzip) {
@@ -192,8 +242,7 @@ function getWebpackConfig(object) {
 			baseConfig.entry[name] = [path.join(__dirname, 'dev-client')].concat(baseConfig.entry[name]);
 		});
 
-		// Developement Config
-		return merge(baseConfig, {
+		const devWebpackConfig = {
 			devServer: {
 				inline: true,
 			},
@@ -226,29 +275,35 @@ function getWebpackConfig(object) {
 					$: "jquery"
 				}),
 
-				// https://github.com/ampedandwired/html-webpack-plugin
-				new HtmlWebpackPlugin({
-					filename: 'index.html',
-					template: path.join(config.sourcePath, 'index.html'),
-					inject: true,
-				}),
-
 				// Friendly Errors
 				new FriendlyErrors(),
-			]
-		}, webpackConfig);
+			],
+		};
+
+		if (!config.library && config.entryHtml) {
+			devWebpackConfig.plugins.concat([
+				// https://github.com/ampedandwired/html-webpack-plugin
+				new HtmlWebpackPlugin({
+					filename: config.entryHtml,
+					template: path.join(config.sourcePath, config.entryHtml),
+					inject: true,
+				}),
+			]);
+		}
+
+		// Developement Config
+		return merge(baseConfig, devWebpackConfig, webpackConfig);
 	}
 
-	// Production Config
-	return merge(baseConfig, {
+	const prodWebpackConfig = {
 		module: {
 			rules: _.values(utils.styleLoaders({sourceMap: config.sourceMap, extract: true})),
 		},
 
 		devtool: config.sourceMap ? '#source-map' : false,
 		output: {
-			filename: 'js/[name].[chunkhash:7].js',
-			chunkFilename: 'js/[id].[chunkhash:7].js',
+			filename: config.library ? '[name].js' : 'js/[name].[chunkhash:7].js',
+			chunkFilename: config.library ? '[id].js' : 'js/[id].[chunkhash:7].js',
 		},
 		plugins: [
 			// http://vuejs.github.io/vue-loader/workflow/production.html
@@ -257,33 +312,37 @@ function getWebpackConfig(object) {
 					NODE_ENV: 'production'
 				}
 			}),
-			new webpack.optimize.DedupePlugin(),
-			new webpack.optimize.UglifyJsPlugin({
-				compress: {
-					warnings: false
-				}
-			}),
+		],
+	};
+
+	if (!config.library) {
+		if (config.entryHtml) {
+			prodWebpackConfig.plugins.concat([
+				// generate dist index.html with correct asset hash for caching.
+				// you can customize output by editing /index.html
+				// see https://github.com/ampedandwired/html-webpack-plugin
+				new HtmlWebpackPlugin({
+					filename: 'index.html',
+					template: path.join(config.sourcePath, 'index.html'),
+					inject: true,
+					minify: {
+						removeComments: true,
+						collapseWhitespace: true,
+						// more options:
+						// https://github.com/kangax/html-minifier#options-quick-reference
+					},
+					// necessary to consistently work with multiple chunks via CommonsChunkPlugin
+					chunksSortMode: 'dependency'
+				}),
+			]);
+		}
+
+		prodWebpackConfig.plugins.concat([
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			// extract css into its own file
 			new ExtractTextPlugin({
 				filename: 'css/[name].[contenthash:7].css',
 				allChunks: true,
-			}),
-			// generate dist index.html with correct asset hash for caching.
-			// you can customize output by editing /index.html
-			// see https://github.com/ampedandwired/html-webpack-plugin
-			new HtmlWebpackPlugin({
-				filename: 'index.html',
-				template: path.join(config.sourcePath, 'index.html'),
-				inject: true,
-				minify: {
-					removeComments: true,
-					collapseWhitespace: true,
-					// more options:
-					// https://github.com/kangax/html-minifier#options-quick-reference
-				},
-				// necessary to consistently work with multiple chunks via CommonsChunkPlugin
-				chunksSortMode: 'dependency'
 			}),
 			// split vendor js into its own file
 			new webpack.optimize.CommonsChunkPlugin({
@@ -305,8 +364,11 @@ function getWebpackConfig(object) {
 				name: 'manifest',
 				chunks: ['vendor']
 			})
-		]
-	}, webpackConfig);
+		]);
+	}
+
+	// Production Config
+	return merge(baseConfig, prodWebpackConfig, webpackConfig);
 }
 
 function getProdConfig({config, webpackConfig}) {
@@ -375,6 +437,41 @@ function runDevServer({config, webpackConfig}) {
 	});
 }
 
+function runRollup({config, rollupConfig}) {
+	const rollup = require('rollup');
+	config = _.assign({}, configRollup, config);
+
+	config.entry = path.resolve(cwd, config.entry);
+	config.dest = path.resolve(cwd, config.dest);
+
+	const plugins = [
+		require('rollup-plugin-babel')({
+			exclude: 'node_modules/**',
+			babelrc: false,
+			presets: babelOptions.presets,
+			plugins: babelOptions.plugins,
+		}),
+	];
+
+	if (config.uglify) {
+		plugins.push(
+			require('rollup-plugin-uglify')()
+		);
+	}
+
+	return rollup.rollup({
+		entry: config.entry,
+		plugins: plugins,
+	}).then(function (bundle) {
+		bundle.write({
+			format: config.libraryFormat || "umd",
+			moduleName: config.library === true ? 'Lib' : config.library,
+			dest: config.dest,
+			sourceMap: config.sourceMap,
+      	});
+	});
+}
+
 module.exports = {
 	getWebpackConfig,
 	getProdConfig,
@@ -383,4 +480,5 @@ module.exports = {
 	runDevWebpack,
 	runProdWebpack,
 	runDevServer,
+	runRollup,
 }

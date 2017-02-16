@@ -152,5 +152,58 @@ const config = {
 	// whether to open the browser automatically
 	// only valid while running dev server, otherwise ignored
 	openBrowser: true,
+
+	// html entry file, generated files will be auto-injected into this
+	entryHtml: 'index.html',
+
+	// whether the exported file should be a library
+	library: false,
+
+	// whether to uglify the output or not
+	// false in developement, true in production
+	uglify: false,
+};
+```
+
+# Rollup
+sm-webpack-config also includes rollup. You can use it as:
+```js
+const smWebpack = require('sm-webpack-config');
+
+const config = {
+	entry: 'src/index.js',
+	dest: 'dest/index.js',
+	library: 'vutils',
+	libraryFormat: 'es',
+	uglify: false,
+	sourceMap: false,
+};
+
+smWebpack.runRollup({config}).then(() => {
+	console.log("Done!");
+});
+```
+
+#### Configuration Options
+```js
+const config = {
+	// entry point of the script (source)
+	entry: 'src/index.js',
+
+	// where to put compiled file
+	dest: 'dest/index.js',
+
+	// library name to give to the module
+	library: 'lib',
+
+	// what format should the compiled file be in
+	// this can be umd, amd, cjs (node like format), es (import / export), iife (for using in <script>)
+	libraryFormat: 'umd',
+
+	// whether to uglify the output
+	uglify: false,
+
+	// whether to generate a sourcemap or not
+	sourceMap: false,
 };
 ```
