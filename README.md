@@ -191,7 +191,7 @@ const config = {
 	entry: 'src/index.js',
 
 	// where to put compiled file
-	dest: 'dest/index.js',
+	dest: 'dist/index.js',
 
 	// library name to give to the module
 	library: 'lib',

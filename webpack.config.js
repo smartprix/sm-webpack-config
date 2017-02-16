@@ -39,7 +39,7 @@ const configProd = _.assign({}, configDev, {
 
 const configRollup = {
 	entry: 'src/index.js',
-	dest: 'dest/index.js',
+	dest: 'dist/index.js',
 	library: 'lib',
 	libraryFormat: 'umd',
 	uglify: false,
