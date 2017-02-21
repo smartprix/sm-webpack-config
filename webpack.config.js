@@ -28,6 +28,7 @@ const configDev = {
 	library: false,
 	uglify: false,
 	rollup: false,
+	quiet: true,
 };
 
 const configProd = _.assign({}, configDev, {
@@ -415,6 +416,7 @@ function runDevServer({config, webpackConfig}) {
 				"/static": "http://localhost:" + devConfig.appPort,
 				"/uploads": "http://localhost:" + devConfig.appPort,
 			},
+			quiet: devConfig.quiet,
 		};
 
 		if (configDev.proxy) {

@@ -34,13 +34,13 @@ function devServer(config, callback) {
 			options = { target: options };
 		}
 		app.use(proxyMiddleware(context, options));
-	})
+	});
 
 	var devMiddleware = webpackDevMiddleware(compiler, {
 		publicPath: config.publicUrl || config.publicPath,
-		noInfo: true,
-		quiet: true,
-	})
+		noInfo: config.quiet ? true : false,
+		quiet: config.quiet ? true : false,
+	});
 
 	var hotMiddleware = webpackHotMiddleware(compiler, {
 		log: () => {}
@@ -52,7 +52,7 @@ function devServer(config, callback) {
 			hotMiddleware.publish({ action: 'reload' });
 			cb();
 		})
-	})
+	});
 
 	// handle fallback for HTML5 history API
 	app.use(historyApiFallback());

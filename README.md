@@ -162,6 +162,9 @@ const config = {
 	// whether to uglify the output or not
 	// false in developement, true in production
 	uglify: false,
+
+	// whether to not display much info while running dev server
+	quiet: true,
 };
 ```
 
