@@ -142,7 +142,7 @@ function getWebpackConfig(object) {
 			},
 		},
 		resolveLoader: {
-			modules: [path.join(__dirname, 'node_modules'), path.join(cwd, 'node_modules')],
+			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 		},
 		module: {
 			rules: [
