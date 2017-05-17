@@ -31,7 +31,9 @@ exports.cssLoaders = function (options) {
 	return {
 		css: generateLoaders(['css']),
 		postcss: generateLoaders(['css']),
-		_postcss: generateLoaders(['css', 'postcss?' + JSON.stringify({config: {path: __dirname}})]),
+		_postcss: generateLoaders(['css', 'postcss?config=' + __dirname]),
+		// for postcss 6.x
+		// _postcss: generateLoaders(['css', 'postcss?' + JSON.stringify({config: {path: __dirname}})]),
 		less: generateLoaders(['css', 'less']),
 		sass: generateLoaders(['css', 'sass?indentedSyntax']),
 		scss: generateLoaders(['css', 'sass']),
