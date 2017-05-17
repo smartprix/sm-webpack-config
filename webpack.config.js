@@ -131,7 +131,7 @@ function getWebpackConfig(object) {
 		},
 		resolve: {
 			extensions: ['.js', '.jsx', '.vue', '.json'],
-			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
+			root: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 			alias: {
 				'res': config.sourcePath,
 				'js': path.join(config.sourcePath, 'js'),
@@ -142,7 +142,7 @@ function getWebpackConfig(object) {
 			},
 		},
 		resolveLoader: {
-			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
+			root: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 		},
 		module: {
 			rules: [
