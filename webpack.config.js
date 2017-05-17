@@ -408,6 +408,11 @@ function runDevServer({config, webpackConfig}) {
 	return new Promise(function(resolve, reject) {
 		const finalWebpackConfig = getWebpackConfig({env: 'development', config, webpackConfig});
 		const devConfig = _.assign({}, configDev, config);
+
+		// destPath will always be . & publicUrl will always be / in case of dev server
+		devConfig.destPath = '.';
+		devConfig.publicUrl = '/';
+
 		const devServerConfig = {
 			webpackConfig: finalWebpackConfig,
 			publicUrl: devConfig.publicUrl,
