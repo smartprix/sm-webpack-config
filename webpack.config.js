@@ -396,15 +396,15 @@ function runWebpack({env, config, webpackConfig}) {
 	});
 }
 
-function runDevWebpack({config, webpackConfig}) {
+function runDevWebpack({config = {}, webpackConfig = {}} = {}) {
 	return runWebpack({env: 'development', config, webpackConfig});
 }
 
-function runProdWebpack({config, webpackConfig}) {
+function runProdWebpack({config = {}, webpackConfig = {}} = {}) {
 	return runWebpack({env: 'production', config, webpackConfig});
 }
 
-function runDevServer({config, webpackConfig}) {
+function runDevServer({config = {}, webpackConfig = {}} = {}) {
 	return new Promise(function(resolve, reject) {
 		const devConfig = _.assign({}, configDev, config);
 
@@ -449,7 +449,7 @@ function runDevServer({config, webpackConfig}) {
 	});
 }
 
-function runRollup({config, rollupConfig}) {
+function runRollup({config = {}, rollupConfig = {}} = {}) {
 	const rollup = require('rollup');
 	config = _.assign({}, configRollup, config);
 
