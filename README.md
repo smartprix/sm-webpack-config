@@ -15,6 +15,8 @@ Install this package
 npm install sm-webpack-config --save-dev
 ```
 
+**NOTE**: You need to install `node-sass` if you want to use sass, and `compression-webpack-plugin` if you want to use gzip option.
+
 ## How to Use
 ```js
 const smWebpack = require('sm-webpack-config');
@@ -162,6 +164,10 @@ const config = {
 	// whether to uglify the output or not
 	// false in developement, true in production
 	uglify: false,
+
+	// whether to pre gzip the files
+	// makes a .gz file for each bundle produced
+	gzip: false,
 
 	// whether to not display much info while running dev server
 	quiet: true,

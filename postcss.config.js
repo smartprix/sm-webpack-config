@@ -41,6 +41,7 @@ module.exports = {
 					selectors: true,
 				},
 			},
+			warnForDuplicates: false,
 		}),
 		mixins(),
 		atExtend(),
