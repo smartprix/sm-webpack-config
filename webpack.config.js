@@ -3,7 +3,9 @@ var path = require('path');
 var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var FriendlyErrors = require('friendly-errors-webpack-plugin')
+var FriendlyErrors = require('friendly-errors-webpack-plugin');
+var OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var gutil = require("gulp-util");
 var opn = require("opn");
 const merge = require('webpack-merge');
@@ -89,9 +91,16 @@ function getWebpackConfig(object) {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
+	const styleLoaders = utils.styleLoaders({
+		sourceMap: config.sourceMap,
+		extract: isProduction ? true : false,
+		minify: isProduction ? true : false,
+	});
+
 	const vueLoaders = utils.cssLoaders({
 		sourceMap: config.sourceMap,
 		extract: isProduction ? true : false,
+		minify: isProduction ? true : false,
 	});
 	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
 
@@ -124,11 +133,13 @@ function getWebpackConfig(object) {
 
 	const baseConfig = {
 		entry: entry,
+
 		output: {
 			path: config.destPath,
 			publicPath: config.publicUrl,
 			filename: config.library ? '[name].js' : 'js/[name].js'
 		},
+
 		resolve: {
 			extensions: ['.js', '.jsx', '.vue', '.json'],
 			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
@@ -141,9 +152,11 @@ function getWebpackConfig(object) {
 				'img': path.join(config.sourcePath, 'img'),
 			},
 		},
+
 		resolveLoader: {
 			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
 		},
+
 		module: {
 			rules: [
 				{
@@ -153,31 +166,41 @@ function getWebpackConfig(object) {
 						loaders: vueLoaders,
 						postcss: postcssOptions,
 						autoprefixer: false,
+						cssModules: {
+							modules: true,
+							importLoaders: true,
+							localIdentName: '[hash:base64:5]',
+						},
 					},
 				},
+
 				jsLoader,
+
 				{
 					test: /\.json$/,
 					loader: 'json-loader',
 				},
+
 				{
 					test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
 					loader: 'url-loader',
 					query: {
 						limit: 3000,
-						name: 'img/[name].[hash:base64:7].[ext]',
+						name: 'img/[name].[hash:base64:5].[ext]',
 					},
 				},
+
 				{
 					test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
 					loader: 'url-loader',
 					query: {
 						limit: 3000,
-						name: 'fonts/[name].[hash:base64:7].[ext]',
+						name: 'fonts/[name].[hash:base64:5].[ext]',
 					},
 				}
 			]
 		},
+
 		node: {
 			console: false,
 			global: true,
@@ -187,7 +210,8 @@ function getWebpackConfig(object) {
 			__dirname: "mock",
 			setImmediate: false,
 		},
-		plugins: []
+
+		plugins: [],
 	}
 
 	if (config.library) {
@@ -251,7 +275,7 @@ function getWebpackConfig(object) {
 				hints: false,
 			},
 			module: {
-				rules: _.values(utils.styleLoaders({sourceMap: config.sourceMap})),
+				rules: _.values(styleLoaders),
 			},
 			// eval-source-map is faster for development
 			devtool: config.sourceMap ? '#eval-source-map' : false,
@@ -298,19 +322,19 @@ function getWebpackConfig(object) {
 
 	const prodWebpackConfig = {
 		module: {
-			rules: _.values(utils.styleLoaders({sourceMap: config.sourceMap, extract: true})),
+			rules: _.values(styleLoaders),
 		},
 
 		devtool: config.sourceMap ? '#source-map' : false,
 		output: {
 			filename: config.library ? '[name].js' : 'js/[name].[chunkhash:7].js',
-			chunkFilename: config.library ? '[id].js' : 'js/[id].[chunkhash:7].js',
+			chunkFilename: config.library ? '[name].[id].js' : 'js/[name].[id].[chunkhash:7].js',
 		},
 		plugins: [
 			// http://vuejs.github.io/vue-loader/workflow/production.html
 			new webpack.DefinePlugin({
 				'process.env': {
-					NODE_ENV: 'production'
+					NODE_ENV: JSON.stringify('production')
 				}
 			}),
 		],
@@ -339,12 +363,10 @@ function getWebpackConfig(object) {
 		}
 
 		prodWebpackConfig.plugins = prodWebpackConfig.plugins.concat([
+			new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en-gb/),
+
 			new webpack.optimize.OccurrenceOrderPlugin(),
-			// extract css into its own file
-			new ExtractTextPlugin({
-				filename: 'css/[name].[contenthash:7].css',
-				allChunks: true,
-			}),
+
 			// split vendor js into its own file
 			new webpack.optimize.CommonsChunkPlugin({
 				name: 'vendor',
@@ -352,19 +374,43 @@ function getWebpackConfig(object) {
 					// any required modules inside node_modules are extracted to vendor
 					return (
 						module.resource &&
-						/\.js$/.test(module.resource) &&
+						/\.(js|vue|json)$/.test(module.resource) &&
 						module.resource.indexOf(
 							path.join(cwd, 'node_modules')
 						) === 0
 					)
 				}
 			}),
+
 			// extract webpack runtime and module manifest to its own file in order to
 			// prevent vendor hash from being updated whenever app bundle is updated
 			new webpack.optimize.CommonsChunkPlugin({
 				name: 'manifest',
 				chunks: ['vendor']
-			})
+			}),
+
+			// extract css into its own file
+			new ExtractTextPlugin({
+				filename: 'css/[name].[contenthash:base64:5].css',
+				allChunks: true,
+			}),
+
+			new OptimizeCssAssetsPlugin({
+				cssProcessorOptions: {
+					discardComments: {
+						removeAll: true,
+					},
+				},
+				canPrint: true,
+			}),
+
+			new BundleAnalyzerPlugin({
+				analyzerMode: 'static',
+				reportFilename: 'webpack.report.html',
+				generateStatsFile: true,
+				statsFilename: 'webpack.stats.json',
+				openAnalyzer: false,
+			}),
 		]);
 	}
 
@@ -388,7 +434,11 @@ function runWebpack({env, config, webpackConfig}) {
 		webpack(finalWebpackConfig, function(err, stats) {
 			if(err) throw new gutil.PluginError('webpack:build', err);
 			gutil.log('[webpack:build]', stats.toString({
-				colors: true
+				colors: true,
+				chunks: false,
+				chunkModules: false,
+				modules: false,
+				children: false,
 			}));
 
 			resolve();
