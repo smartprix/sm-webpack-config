@@ -76,6 +76,10 @@ function getWebpackConfig(object) {
 	const env = object.env || process.env.NODE_ENV || 'development';
 
 	const isProduction = env === 'production';
+
+	// correct NODE_ENV is important for vue-loader to correctly minify files
+	process.env.NODE_ENV = isProduction ? 'production' : env;
+
 	let config = isProduction ? configProd : configDev;
 	if (object.config) {
 		config = _.assign({}, config, object.config);
@@ -182,11 +186,14 @@ function getWebpackConfig(object) {
 				},
 
 				{
-					test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
+					test: /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/,
 					loader: 'url-loader',
 					query: {
 						limit: 3000,
-						name: 'img/[name].[hash:base64:5].[ext]',
+						// this is because file-loader just concats it to the path
+						// instead of treating it as a path
+						outputPath: config.devServer ? 'img/' : '/img/',
+						name: '[name].[hash:base64:5].[ext]',
 					},
 				},
 
@@ -195,7 +202,10 @@ function getWebpackConfig(object) {
 					loader: 'url-loader',
 					query: {
 						limit: 3000,
-						name: 'fonts/[name].[hash:base64:5].[ext]',
+						// this is because file-loader just concats it to the path
+						// instead of treating it as a path
+						outputPath: config.devServer ? 'fonts/' : '/fonts/',
+						name: '[name].[hash:base64:5].[ext]',
 					},
 				}
 			]
@@ -211,7 +221,13 @@ function getWebpackConfig(object) {
 			setImmediate: false,
 		},
 
-		plugins: [],
+		plugins: [
+			new webpack.DefinePlugin({
+				'process.env': {
+					NODE_ENV: JSON.stringify(isProduction ? 'production' : 'development'),
+				},
+			}),
+		],
 	}
 
 	if (config.library) {
@@ -236,10 +252,13 @@ function getWebpackConfig(object) {
 	if (config.uglify) {
 		baseConfig.plugins.push(
 			new webpack.optimize.UglifyJsPlugin({
+				output: {
+					comments: false,
+				},
 				compress: {
-					warnings: false
-				}
-			})
+					warnings: false,
+				},
+			}),
 		);
 	}
 
@@ -280,12 +299,6 @@ function getWebpackConfig(object) {
 			// eval-source-map is faster for development
 			devtool: config.sourceMap ? '#eval-source-map' : false,
 			plugins: [
-				new webpack.DefinePlugin({
-					'process.env': {
-						NODE_ENV: "'development'"
-					}
-				}),
-
 				// all plugins are required for hot module replacement
 				// https://github.com/glenjamin/webpack-hot-middleware#installation--usage
 				new webpack.optimize.OccurrenceOrderPlugin(),
@@ -305,7 +318,7 @@ function getWebpackConfig(object) {
 			],
 		};
 
-		if (!config.library, config.entryHtml) {
+		if (!config.library && config.entryHtml) {
 			devWebpackConfig.plugins.push(
 				// https://github.com/ampedandwired/html-webpack-plugin
 				new HtmlWebpackPlugin({
@@ -330,14 +343,8 @@ function getWebpackConfig(object) {
 			filename: config.library ? '[name].js' : 'js/[name].[chunkhash:7].js',
 			chunkFilename: config.library ? '[name].[id].js' : 'js/[name].[id].[chunkhash:7].js',
 		},
-		plugins: [
-			// http://vuejs.github.io/vue-loader/workflow/production.html
-			new webpack.DefinePlugin({
-				'process.env': {
-					NODE_ENV: JSON.stringify('production')
-				}
-			}),
-		],
+
+		plugins: [],
 	};
 
 	if (!config.library) {
@@ -363,9 +370,14 @@ function getWebpackConfig(object) {
 		}
 
 		prodWebpackConfig.plugins = prodWebpackConfig.plugins.concat([
+			// remove all momentjs locale except for the en-gb locale
+			// this helps in reducing momentjs size by quite a bit
 			new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en-gb/),
 
 			new webpack.optimize.OccurrenceOrderPlugin(),
+
+			// concatenate modules like rollup instead of wrapping them in functions
+			new webpack.optimize.ModuleConcatenationPlugin(),
 
 			// split vendor js into its own file
 			new webpack.optimize.CommonsChunkPlugin({
@@ -395,6 +407,7 @@ function getWebpackConfig(object) {
 				allChunks: true,
 			}),
 
+			// minify extracted css
 			new OptimizeCssAssetsPlugin({
 				cssProcessorOptions: {
 					discardComments: {
@@ -404,6 +417,8 @@ function getWebpackConfig(object) {
 				canPrint: true,
 			}),
 
+			// generate bundle size stats so we can analyze them
+			// to see which dependecies are the heaviest
 			new BundleAnalyzerPlugin({
 				analyzerMode: 'static',
 				reportFilename: 'webpack.report.html',
@@ -461,6 +476,7 @@ function runDevServer({config = {}, webpackConfig = {}} = {}) {
 		// destPath will always be . & publicUrl will always be / in case of dev server
 		devConfig.destPath = '.';
 		devConfig.publicUrl = '/';
+		devConfig.devServer = true;
 
 		const finalWebpackConfig = getWebpackConfig({
 			env: 'development',
