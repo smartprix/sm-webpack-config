@@ -64,9 +64,9 @@ function styleLoaders(options) {
 		var loader = loaders[extension];
 
 		if (extension === 'css' || extension === 'postcss') {
-			loader = generateLoaders(['css', 'postcss?config=' + __dirname], options);
+			// loader = generateLoaders(['css', 'postcss?config=' + __dirname], options);
 			// for postcss 6.x
-			// loader = generateLoaders(['css', 'postcss?' + JSON.stringify({config: {path: __dirname}})], options),
+			loader = generateLoaders(['css', 'postcss?' + JSON.stringify({config: {path: __dirname}})], options);
 		}
 
 		output[extension] = {
