@@ -270,4 +270,21 @@ const webpackSsrConfig = {
 		libraryTarget: 'commonjs2',
 	},
 };
+
+// example config
+const config = {
+	sourcePath: 'res/ssr',
+	destPath: 'static/ssr/dist',
+	publicUrl: '/static/ssr/dist',
+	uglify: false,
+	gzip: false,
+	library: true,
+	eslint: false,
+};
+
+// Build sever For Production
+smWebpack.runProdWebpack({
+			config: config,
+			webpackConfig: webpackSsrConfig,
+		}),
 ```
