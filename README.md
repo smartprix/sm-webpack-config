@@ -216,3 +216,58 @@ const config = {
 	sourceMap: false,
 };
 ```
+
+
+#### For Server Side Rendering
+```js
+const webpackSsrConfig = {
+	// set target
+	target: 'node',
+
+	// set server entry
+	entry: {
+		app: './res/ssr/entry-server.js',
+	},
+
+	// add additional module rules
+	module: {
+		rules: [
+			{
+				test: /\.css$/,
+				use: [
+					'vue-style-loader',
+					'css-loader',
+				],
+			},
+			{
+				test: /\.scss$/,
+				use: [
+					'vue-style-loader',
+					'css-loader',
+					'sass-loader',
+				],
+			},
+			{
+				test: /\.sass$/,
+				use: [
+					'vue-style-loader',
+					'css-loader',
+					'sass-loader?indentedSyntax',
+				],
+			},
+			{
+				test: /\.js$/,
+				loader: 'babel-loader',
+				exclude: /node_modules/,
+			},
+		],
+	},
+
+	// add desired output path
+	output: {
+		path: path.resolve(__dirname, './static/ssr/dist'),
+		filename: 'server.bundle.js',
+		libraryTarget: 'commonjs2',
+	},
+};
+```
