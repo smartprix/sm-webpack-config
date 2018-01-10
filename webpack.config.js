@@ -167,13 +167,17 @@ function getWebpackConfig(object) {
 					test: /\.vue$/,
 					loader: 'vue-loader',
 					options: {
-						loaders: vueLoaders,
-						postcss: postcssOptions,
-						autoprefixer: false,
-						cssModules: {
-							modules: true,
-							importLoaders: true,
-							localIdentName: '[hash:base64:5]',
+						loaders: {
+							scss: [
+								'vue-style-loader',
+								'css-loader',
+								'sass-loader',
+							],
+							sass: [
+								'vue-style-loader',
+								'css-loader',
+								'sass-loader?indentedSyntax',
+							],
 						},
 					},
 				},
@@ -186,14 +190,10 @@ function getWebpackConfig(object) {
 				},
 
 				{
-					test: /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/,
-					loader: 'url-loader',
-					query: {
-						limit: 3000,
-						// this is because file-loader just concats it to the path
-						// instead of treating it as a path
-						outputPath: config.devServer ? 'img/' : '/img/',
-						name: '[name].[hash:base64:5].[ext]',
+					test: /\.(png|jpg|gif|svg)$/,
+					loader: 'file-loader',
+					options: {
+						name: '/[name].[ext]?[hash]',
 					},
 				},
 
