@@ -279,7 +279,30 @@ const config = {
 	uglify: false,
 	gzip: false,
 	library: true,
-	eslint: false,
+	eslint: true,
+	// add option for vue loader
+	loaders: {
+		vueLoaders: {
+			scss: [
+				'vue-style-loader',
+				'css-loader',
+				'sass-loader',
+			],
+			sass: [
+				'vue-style-loader',
+				'css-loader',
+				'sass-loader?indentedSyntax',
+			],
+		},
+	},
+	// add new rule for image loader
+	imgLoaders: {
+		test: /\.(png|jpg|gif|svg)$/,
+		loader: 'file-loader',
+		options: {
+			name: '/[name].[ext]?[hash]',
+		},
+	},
 };
 
 // Build sever For Production

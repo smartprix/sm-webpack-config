@@ -31,6 +31,7 @@ const configDev = {
 	uglify: false,
 	rollup: false,
 	quiet: true,
+	loaders: '',
 };
 
 const configProd = _.assign({}, configDev, {
@@ -101,12 +102,30 @@ function getWebpackConfig(object) {
 		minify: isProduction ? true : false,
 	});
 
-	const vueLoaders = utils.cssLoaders({
+	let vueLoaders = utils.cssLoaders({
 		sourceMap: config.sourceMap,
 		extract: isProduction ? true : false,
 		minify: isProduction ? true : false,
 	});
 	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
+
+	if(config && config.loaders && config.loaders.vueLoaders) {
+		console.log(config.loaders.vueLoaders, "webpackConfig.vueLoaders");
+		vueLoaders = config.loaders.vueLoaders;
+	}
+	let imgLoaders = {
+					test: /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/,
+					loader: 'url-loader',
+					query: {
+						limit: 3000,
+						// this is because file-loader just concats it to the path
+						// instead of treating it as a path
+						outputPath: config.devServer ? 'img/' : '/img/',
+						name: '[name].[hash:base64:5].[ext]',
+					},
+				};
+
+	if(config.imgLoaders) imgLoaders = config.imgLoaders;
 
 	let jsLoader = {
 		test: /\.jsx?$/,
@@ -167,17 +186,13 @@ function getWebpackConfig(object) {
 					test: /\.vue$/,
 					loader: 'vue-loader',
 					options: {
-						loaders: {
-							scss: [
-								'vue-style-loader',
-								'css-loader',
-								'sass-loader',
-							],
-							sass: [
-								'vue-style-loader',
-								'css-loader',
-								'sass-loader?indentedSyntax',
-							],
+						loaders: vueLoaders,
+						postcss: postcssOptions,
+						autoprefixer: false,
+						cssModules: {
+							modules: true,
+							importLoaders: true,
+							localIdentName: '[hash:base64:5]',
 						},
 					},
 				},
@@ -189,13 +204,7 @@ function getWebpackConfig(object) {
 					loader: 'json-loader',
 				},
 
-				{
-					test: /\.(png|jpg|gif|svg)$/,
-					loader: 'file-loader',
-					options: {
-						name: '/[name].[ext]?[hash]',
-					},
-				},
+				imgLoaders,
 
 				{
 					test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
