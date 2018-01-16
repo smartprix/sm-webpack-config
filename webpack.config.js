@@ -356,6 +356,32 @@ function getWebpackConfig(object) {
 		plugins: [],
 	};
 
+	if(config.library) {
+		prodWebpackConfig.plugins = prodWebpackConfig.plugins.concat([
+			new ExtractTextPlugin({
+				filename: 'css/[name].css',
+				allChunks: true,
+			}),
+		]);
+		if(config.html === true) {
+			prodWebpackConfig.plugins = prodWebpackConfig.plugins.concat([
+				new HtmlWebpackPlugin({
+					filename: 'index.html',
+					template: path.join(config.sourcePath, 'index.html'),
+					inject: true,
+					minify: {
+						removeComments: false,
+						collapseWhitespace: false,
+					// more options:
+					// https://github.com/kangax/html-minifier#options-quick-reference
+					},
+				// necessary to consistently work with multiple chunks via CommonsChunkPlugin
+					chunksSortMode: 'dependency'
+				}),
+			]);
+		}
+	}
+
 	if (!config.library) {
 		if (config.entryHtml) {
 			prodWebpackConfig.plugins.push(
@@ -439,6 +465,7 @@ function getWebpackConfig(object) {
 	}
 
 	// Production Config
+	console.log((merge(baseConfig, prodWebpackConfig, webpackConfig)).module.rules);
 	return merge(baseConfig, prodWebpackConfig, webpackConfig);
 }
 

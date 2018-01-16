@@ -280,6 +280,8 @@ const config = {
 	gzip: false,
 	library: true,
 	eslint: true,
+	// html optional only needed when library true
+	html: false,
 	// add option for vue loader
 	loaders: {
 		vueLoaders: {
