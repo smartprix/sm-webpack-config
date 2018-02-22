@@ -1,3 +1,4 @@
+/* eslint-disable */
 var _ = require('lodash');
 var path = require('path');
 var webpack = require('webpack');
@@ -55,16 +56,30 @@ const cwd = process.cwd();
 const babelOptions = {
 	presets: [
 		[
-			require.resolve("babel-preset-es2015"),
-			{ "loose": true, "modules": false }
+			require.resolve("@babel/preset-env"),
+			{ "loose": true, "modules": false },
 		],
-		require.resolve("babel-preset-es2016"),
-		require.resolve("babel-preset-es2017"),
-		require.resolve("babel-preset-stage-3"),
+		[
+			require.resolve("@babel/preset-stage-3"),
+			{ "loose": true },
+		],
 	],
 	plugins: [
 		require.resolve("babel-plugin-transform-vue-jsx"),
-		require.resolve("babel-plugin-transform-class-properties"),
+		require.resolve("babel-plugin-jsx-v-model"),
+		require.resolve("@babel/plugin-proposal-optional-catch-binding"),
+		[
+        	require.resolve("@babel/plugin-proposal-class-properties"),
+        	{ "loose": true },
+		],
+		[
+			require.resolve("@babel/plugin-proposal-optional-chaining"),
+			{ "loose": true },
+		],
+		[
+			require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
+			{ "loose": true },
+		],
 	],
 };
 
