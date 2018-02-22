@@ -40,11 +40,13 @@ function generateLoaders (loaders, options) {
 
 function cssLoaders(options) {
 	options = options || {};
+	const postcss = 'postcss?' + JSON.stringify({config: {path: __dirname}});
 
 	// http://vuejs.github.io/vue-loader/configurations/extract-css.html
 	return {
-		css: generateLoaders(['css'], options),
-		postcss: generateLoaders(['css'], options),
+		css: generateLoaders(['css', postcss], options),
+		postcss: generateLoaders(['css', postcss], options),
+		pcss: generateLoaders(['css', postcss], options),
 		less: generateLoaders(['css', 'less'], options),
 		sass: generateLoaders(['css', 'sass?indentedSyntax'], options),
 		scss: generateLoaders(['css', 'sass'], options),
@@ -62,12 +64,6 @@ function styleLoaders(options) {
 
 	for (var extension in loaders) {
 		var loader = loaders[extension];
-
-		if (extension === 'css' || extension === 'postcss') {
-			// loader = generateLoaders(['css', 'postcss?config=' + __dirname], options);
-			// for postcss 6.x
-			loader = generateLoaders(['css', 'postcss?' + JSON.stringify({config: {path: __dirname}})], options);
-		}
 
 		output[extension] = {
 			test: new RegExp('\\.' + extension + '$'),
