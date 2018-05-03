@@ -9,6 +9,7 @@ var OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var gutil = require("gulp-util");
 var opn = require("opn");
+const { VueLoaderPlugin } = require('vue-loader');
 const merge = require('webpack-merge');
 
 const WebpackDevServer = require('./dev-server');
@@ -121,13 +122,17 @@ function getWebpackConfig(object) {
 		extract: isProduction ? true : false,
 		minify: isProduction ? true : false,
 	});
+	
 	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
 
 	let jsLoader = {
 		test: /\.jsx?$/,
 		loader: 'babel-loader',
-		include: config.sourcePath,
-		exclude: /node_modules/,
+		exclude: function (path) {
+			if (path.includes('.vue')) return false;
+			if (path.includes('node_modules')) return true;	
+			return false;
+		},
 		options: babelOptions,
 	};
 
@@ -151,6 +156,7 @@ function getWebpackConfig(object) {
 	}
 
 	const baseConfig = {
+		mode: isProduction ? 'production' : 'development',
 		entry: entry,
 
 		output: {
@@ -181,16 +187,7 @@ function getWebpackConfig(object) {
 				{
 					test: /\.vue$/,
 					loader: 'vue-loader',
-					options: {
-						loaders: vueLoaders,
-						postcss: postcssOptions,
-						autoprefixer: false,
-						cssModules: {
-							modules: true,
-							importLoaders: true,
-							localIdentName: '[hash:base64:5]',
-						},
-					},
+					options: {},
 				},
 
 				jsLoader,
@@ -202,27 +199,31 @@ function getWebpackConfig(object) {
 
 				{
 					test: /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/,
-					loader: 'url-loader',
-					query: {
-						limit: 3000,
-						// this is because file-loader just concats it to the path
-						// instead of treating it as a path
-						outputPath: config.devServer ? 'img/' : '/img/',
-						name: '[name].[hash:base64:5].[ext]',
-					},
+					use: [{
+						loader: 'url-loader',
+						options: {
+							limit: 3000,
+							// this is because file-loader just concats it to the path
+							// instead of treating it as a path
+							outputPath: config.devServer ? 'img/' : '/img/',
+							name: '[name].[hash:base64:5].[ext]',
+						}
+					}],
 				},
 
 				{
 					test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-					loader: 'url-loader',
-					query: {
-						limit: 3000,
-						// this is because file-loader just concats it to the path
-						// instead of treating it as a path
-						outputPath: config.devServer ? 'fonts/' : '/fonts/',
-						name: '[name].[hash:base64:5].[ext]',
-					},
-				}
+					use: [{
+						loader: 'url-loader',
+						options: {
+							limit: 3000,
+							// this is because file-loader just concats it to the path
+							// instead of treating it as a path
+							outputPath: config.devServer ? 'font/' : '/fonts/',
+							name: '[name].[hash:base64:5].[ext]',
+						}
+					}],
+				},
 			]
 		},
 
@@ -236,12 +237,30 @@ function getWebpackConfig(object) {
 			setImmediate: false,
 		},
 
+		optimization: {
+			minimize: false,
+			runtimeChunk: 'single',
+			splitChunks: {
+				cacheGroups: {
+					vendors: {
+						test: /[\\/]node_modules[\\/]/,
+						name: 'vendor',
+						enforce: true,
+						chunks: 'all',
+					},
+				},
+			},
+		},
+
 		plugins: [
 			new webpack.DefinePlugin({
 				'process.env': {
 					NODE_ENV: JSON.stringify(isProduction ? 'production' : 'development'),
 				},
 			}),
+
+			// vue loader plugin is required for vue files
+			new VueLoaderPlugin(),
 		],
 	}
 
@@ -265,16 +284,7 @@ function getWebpackConfig(object) {
 	}
 
 	if (config.uglify) {
-		baseConfig.plugins.push(
-			new webpack.optimize.UglifyJsPlugin({
-				output: {
-					comments: false,
-				},
-				compress: {
-					warnings: false,
-				},
-			}),
-		);
+		baseConfig.optimization.minimize = true;
 	}
 
 	if (config.gzip) {
@@ -318,7 +328,6 @@ function getWebpackConfig(object) {
 				// https://github.com/glenjamin/webpack-hot-middleware#installation--usage
 				new webpack.optimize.OccurrenceOrderPlugin(),
 				new webpack.HotModuleReplacementPlugin(),
-				new webpack.NoEmitOnErrorsPlugin(),
 
 				new webpack.ProvidePlugin({
 					// Automtically detect jQuery and $ as free var in modules
@@ -359,7 +368,8 @@ function getWebpackConfig(object) {
 			chunkFilename: config.library ? '[name].[id].js' : 'js/[name].[id].[chunkhash:7].js',
 		},
 
-		plugins: [],
+		plugins: [
+		],
 	};
 
 	if (!config.library) {
@@ -390,32 +400,7 @@ function getWebpackConfig(object) {
 			new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en-gb/),
 
 			new webpack.optimize.OccurrenceOrderPlugin(),
-
-			// concatenate modules like rollup instead of wrapping them in functions
-			new webpack.optimize.ModuleConcatenationPlugin(),
-
-			// split vendor js into its own file
-			new webpack.optimize.CommonsChunkPlugin({
-				name: 'vendor',
-				minChunks: function (module, count) {
-					// any required modules inside node_modules are extracted to vendor
-					return (
-						module.resource &&
-						/\.(js|vue|json|css)$/.test(module.resource) &&
-						module.resource.indexOf(
-							path.join(cwd, 'node_modules')
-						) === 0
-					)
-				}
-			}),
-
-			// extract webpack runtime and module manifest to its own file in order to
-			// prevent vendor hash from being updated whenever app bundle is updated
-			new webpack.optimize.CommonsChunkPlugin({
-				name: 'manifest',
-				chunks: ['vendor']
-			}),
-
+			
 			// extract css into its own file
 			new ExtractTextPlugin({
 				filename: 'css/[name].[contenthash:base64:5].css',
