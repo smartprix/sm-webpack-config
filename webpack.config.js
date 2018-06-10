@@ -7,7 +7,6 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var FriendlyErrors = require('friendly-errors-webpack-plugin');
 var OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-var gutil = require("gulp-util");
 var opn = require("opn");
 const { VueLoaderPlugin } = require('vue-loader');
 const merge = require('webpack-merge');
@@ -29,6 +28,7 @@ const configDev = {
 		app: 'js/index.js',
 	},
 	entryHtml: 'index.html',
+	appendHash: true,
 	library: false,
 	uglify: false,
 	rollup: false,
@@ -122,7 +122,7 @@ function getWebpackConfig(object) {
 		extract: isProduction ? true : false,
 		minify: isProduction ? true : false,
 	});
-	
+
 	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
 
 	let jsLoader = {
@@ -130,7 +130,7 @@ function getWebpackConfig(object) {
 		loader: 'babel-loader',
 		exclude: function (path) {
 			if (path.includes('.vue')) return false;
-			if (path.includes('node_modules')) return true;	
+			if (path.includes('node_modules')) return true;
 			return false;
 		},
 		options: babelOptions,
@@ -162,7 +162,7 @@ function getWebpackConfig(object) {
 		output: {
 			path: config.destPath,
 			publicPath: config.publicUrl,
-			filename: config.library ? '[name].js' : 'js/[name].js'
+			filename: (config.library || !config.appendHash) ? '[name].js' : 'js/[name].js'
 		},
 
 		resolve: {
@@ -364,8 +364,8 @@ function getWebpackConfig(object) {
 
 		devtool: config.sourceMap ? '#source-map' : false,
 		output: {
-			filename: config.library ? '[name].js' : 'js/[name].[chunkhash:7].js',
-			chunkFilename: config.library ? '[name].[id].js' : 'js/[name].[id].[chunkhash:7].js',
+			filename: (config.library || !config.appendHash) ? '[name].js' : 'js/[name].[chunkhash:7].js',
+			chunkFilename: (config.library || !config.appendHash) ? '[name].[id].js' : 'js/[name].[id].[chunkhash:7].js',
 		},
 
 		plugins: [
@@ -400,7 +400,7 @@ function getWebpackConfig(object) {
 			new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en-gb/),
 
 			new webpack.optimize.OccurrenceOrderPlugin(),
-			
+
 			// extract css into its own file
 			new ExtractTextPlugin({
 				filename: 'css/[name].[contenthash:base64:5].css',
@@ -447,8 +447,8 @@ function runWebpack({env, config, webpackConfig}) {
 
 		// run webpack
 		webpack(finalWebpackConfig, function(err, stats) {
-			if(err) throw new gutil.PluginError('webpack:build', err);
-			gutil.log('[webpack:build]', stats.toString({
+			if(err) throw new Error(err);
+			console.log(stats.toString({
 				colors: true,
 				chunks: false,
 				chunkModules: false,
@@ -502,9 +502,9 @@ function runDevServer({config = {}, webpackConfig = {}} = {}) {
 		const url = "http://localhost:" + devConfig.devServerPort;
 
 		// Start a webpack-dev-server
-		WebpackDevServer(devServerConfig, () => gutil.log("[webpack-dev-server]", url))
+		WebpackDevServer(devServerConfig, () => console.log("[webpack-dev-server]", url))
 			.listen(devConfig.devServerPort, "0.0.0.0", function(err) {
-				if(err) throw new gutil.PluginError("webpack-dev-server", err);
+				if(err) throw new Error(err);
 
 				if (devConfig.openBrowser) {
 					opn(url);

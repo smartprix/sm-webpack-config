@@ -161,6 +161,9 @@ const config = {
 	// whether the exported file should be a library
 	library: false,
 
+	// append hash of the file to the filename
+	appendHash: true,
+
 	// whether to uglify the output or not
 	// false in developement, true in production
 	uglify: false,
