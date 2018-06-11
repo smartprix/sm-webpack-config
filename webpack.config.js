@@ -55,6 +55,7 @@ const cwd = process.cwd();
 
 // polyfills required, object.assign, promise
 const babelOptions = {
+	babelrc: false,
 	presets: [
 		[
 			require.resolve("@babel/preset-env"),
