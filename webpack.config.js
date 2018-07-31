@@ -60,14 +60,18 @@ const babelOptions = {
 			require.resolve("@babel/preset-env"),
 			{ "loose": true, "modules": false },
 		],
-		[
-			require.resolve("@babel/preset-stage-3"),
-			{ "loose": true },
-		],
 	],
 	plugins: [
+		// stage 3
+		require.resolve('@babel/plugin-syntax-dynamic-import'),
+		require.resolve('@babel/plugin-syntax-import-meta'),
+		require.resolve('@babel/plugin-proposal-json-strings'),
+
+		// vue
 		require.resolve("babel-plugin-transform-vue-jsx"),
 		require.resolve("babel-plugin-jsx-v-model"),
+
+		// esnext
 		require.resolve("@babel/plugin-proposal-optional-catch-binding"),
 		[
         	require.resolve("@babel/plugin-proposal-class-properties"),
