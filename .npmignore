@@ -49,3 +49,7 @@ benchmarks/graphs
 
 # Environment Files
 env.*
+
+# Lock files (this is a library)
+package-lock.json
+yarn.lock
