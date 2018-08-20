@@ -7,6 +7,7 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var FriendlyErrors = require('friendly-errors-webpack-plugin');
 var OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 var opn = require("opn");
 const { VueLoaderPlugin } = require('vue-loader');
 const merge = require('webpack-merge');
@@ -208,6 +209,7 @@ function getWebpackConfig(object) {
 						loader: 'url-loader',
 						options: {
 							limit: 3000,
+							fallback: 'file-loader',
 							// this is because file-loader just concats it to the path
 							// instead of treating it as a path
 							outputPath: config.devServer ? 'img/' : '/img/',
@@ -222,6 +224,7 @@ function getWebpackConfig(object) {
 						loader: 'url-loader',
 						options: {
 							limit: 3000,
+							fallback: 'file-loader',
 							// this is because file-loader just concats it to the path
 							// instead of treating it as a path
 							outputPath: config.devServer ? 'font/' : '/fonts/',
@@ -374,6 +377,10 @@ function getWebpackConfig(object) {
 		},
 
 		plugins: [
+			// clean the dist folder
+			new CleanWebpackPlugin(config.destPath, {
+				root: process.cwd(),
+			}),
 		],
 	};
 
