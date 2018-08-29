@@ -34,6 +34,7 @@ const configDev = {
 	uglify: false,
 	rollup: false,
 	quiet: true,
+	babelTargets: { chrome: '58' },
 };
 
 const configProd = _.assign({}, configDev, {
@@ -112,6 +113,11 @@ function getWebpackConfig(object) {
 	config.sourcePath = path.join(cwd, config.sourcePath);
 	config.destPath = path.join(cwd, config.destPath);
 
+	// append / to the end of publicUrl, webpack outputs wrong urls otherwise
+	if (!config.publicUrl.endsWith('/')) {
+		config.publicUrl += '/';
+	}
+
 	const entry = {};
 	_.forEach(config.entry, function(value, key) {
 		entry[key] = path.join(config.sourcePath, value);
@@ -128,6 +134,8 @@ function getWebpackConfig(object) {
 		extract: isProduction ? true : false,
 		minify: isProduction ? true : false,
 	});
+
+	babelOptions.presets[0][1].targets = config.babelTargets || {chrome: '58'};
 
 	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
 
@@ -189,6 +197,8 @@ function getWebpackConfig(object) {
 		},
 
 		module: {
+			// don't parse these modules as they are not made for webpack
+			noParse: /node_modules(.*)\/firepad/,
 			rules: [
 				{
 					test: /\.vue$/,
@@ -204,15 +214,27 @@ function getWebpackConfig(object) {
 				},
 
 				{
+					test: /\.ejs$/,
+					loader: 'ejs-loader',
+				},
+
+				{
+					test: /\.(ico)(\?.*)?$/,
+					loader: 'file-loader',
+					options: {
+						outputPath: 'files/',
+						name: '[name].[hash:base64:5].[ext]',
+					},
+				},
+
+				{
 					test: /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/,
 					use: [{
 						loader: 'url-loader',
 						options: {
 							limit: 3000,
 							fallback: 'file-loader',
-							// this is because file-loader just concats it to the path
-							// instead of treating it as a path
-							outputPath: config.devServer ? 'img/' : '/img/',
+							outputPath: 'img/',
 							name: '[name].[hash:base64:5].[ext]',
 						}
 					}],
@@ -225,9 +247,7 @@ function getWebpackConfig(object) {
 						options: {
 							limit: 3000,
 							fallback: 'file-loader',
-							// this is because file-loader just concats it to the path
-							// instead of treating it as a path
-							outputPath: config.devServer ? 'font/' : '/fonts/',
+							outputPath: 'fonts/',
 							name: '[name].[hash:base64:5].[ext]',
 						}
 					}],
@@ -248,16 +268,22 @@ function getWebpackConfig(object) {
 		optimization: {
 			minimize: false,
 			runtimeChunk: 'single',
+			nodeEnv: isProduction ? 'production' : 'development',
 			splitChunks: {
+				chunks: 'all',
+				name: true,
 				cacheGroups: {
 					vendors: {
 						test: /[\\/]node_modules[\\/]/,
-						name: 'vendor',
-						enforce: true,
-						chunks: 'all',
+						priority: -10,
 					},
-				},
-			},
+					default: {
+						minChunks: 2,
+						priority: -20,
+						reuseExistingChunk: true,
+					},
+				}
+			}
 		},
 
 		plugins: [
@@ -354,7 +380,7 @@ function getWebpackConfig(object) {
 			devWebpackConfig.plugins.push(
 				// https://github.com/ampedandwired/html-webpack-plugin
 				new HtmlWebpackPlugin({
-					filename: config.entryHtml,
+					filename: `${config.entryHtml}`,
 					template: path.join(config.sourcePath, config.entryHtml),
 					inject: true,
 				})
@@ -381,6 +407,14 @@ function getWebpackConfig(object) {
 			new CleanWebpackPlugin(config.destPath, {
 				root: process.cwd(),
 			}),
+
+			new webpack.ProvidePlugin({
+				// Automtically detect jQuery and $ as free var in modules
+				// and inject the jquery library
+				// This is required by many jquery plugins
+				jQuery: "jquery",
+				$: "jquery"
+			}),
 		],
 	};
 
@@ -391,8 +425,8 @@ function getWebpackConfig(object) {
 				// you can customize output by editing /index.html
 				// see https://github.com/ampedandwired/html-webpack-plugin
 				new HtmlWebpackPlugin({
-					filename: 'index.html',
-					template: path.join(config.sourcePath, 'index.html'),
+					filename: `${config.entryHtml}`,
+					template: path.join(config.sourcePath, config.entryHtml),
 					inject: true,
 					minify: {
 						removeComments: true,
