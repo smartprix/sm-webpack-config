@@ -37,6 +37,7 @@
     "connect-history-api-fallback": "1.5.0",
     "css-loader": "^1.0.0",
     "css-mqpacker": "^7.0.0",
+    "ejs-loader": "^0.3.1",
     "eslint": "*",
     "eslint-config-smartprix": "*",
     "eslint-friendly-formatter": "^4.0.1",

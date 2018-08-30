@@ -174,6 +174,9 @@ const config = {
 
 	// whether to not display much info while running dev server
 	quiet: true,
+
+	// Browser targets for babel
+	babelTargets: { chrome: '58' },
 };
 ```
 
