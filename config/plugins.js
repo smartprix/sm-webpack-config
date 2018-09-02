@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 const notifier = require('node-notifier');
@@ -182,9 +183,15 @@ function getFriendlyErrorsPlugin(config) {
 }
 
 function getCopyPlugin(config) {
+	const from = path.join(config.sourcePath, 'public');
+	// don't use plugin if source folder does not exist
+	if (!fs.existsSync(from)) {
+		return null;
+	}
+
 	return new CopyWebpackPlugin([
 		{
-			from: path.join(config.sourcePath, 'public'),
+			from,
 			to: path.join(config.destPath, 'public'),
 			toType: 'dir',
 		},
@@ -234,7 +241,7 @@ function getPlugins(config = {}) {
 		plugins.push(...getDevelopmentPlugins(config));
 	}
 
-	return plugins;
+	return plugins.filter(Boolean);
 }
 
 module.exports = {
