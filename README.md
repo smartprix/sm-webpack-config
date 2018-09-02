@@ -193,6 +193,8 @@ const config = {
 
 	// whether to generate analyzer report with the generated bundle
 	// false in development, true in production
+	// this can also be an object which will be passed to WebpackBundleAnalyzerPlugin
+	// analyzeBundle: {openAnalyzer: true, generateStatsFile: true}
 	analyzeBundle: false,
 
 	// whether this bundle is meant for server (vue ssr)

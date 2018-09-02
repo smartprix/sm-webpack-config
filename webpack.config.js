@@ -134,7 +134,8 @@ function runWebpack({env, config, webpackConfig}) {
 			}
 
 			console.log(formatStats(stats, config.destPath));
-			resolve();
+			// give time to webpack bundle analyzer to output stats
+			setImmediate(resolve);
 		});
 	});
 }

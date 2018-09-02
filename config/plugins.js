@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const path = require('path');
 const chalk = require('chalk');
 const notifier = require('node-notifier');
@@ -59,19 +60,25 @@ function getCompressionPlugin() {
 	});
 }
 
-function getBundleAnalyzerPlugin() {
+function getBundleAnalyzerPlugin(config) {
 	// eslint-disable-next-line
 	const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
 	// generate bundle size stats so we can analyze them
 	// to see which dependecies are the heaviest
-	return new BundleAnalyzerPlugin({
+	const options = {
 		analyzerMode: 'static',
 		reportFilename: 'webpack.report.html',
-		generateStatsFile: true,
+		generateStatsFile: false,
 		statsFilename: 'webpack.stats.json',
 		openAnalyzer: false,
-	});
+	};
+
+	if (_.isPlainObject(config.analyzeBundle)) {
+		Object.assign(options, config.analyzeBundle);
+	}
+
+	return new BundleAnalyzerPlugin(options);
 }
 
 function getDevelopmentPlugins() {
