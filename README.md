@@ -86,6 +86,9 @@ Now you can use `gulp` to run dev-server and `gulp build` to build for productio
   * images in `img`
   * other assests in `assests`
     * eg. fonts can be kept in `assests/fonts`
+  * directly served static assests in `public`
+    * assests in this directory will not be compiled and copied directly to the `public` folder in dist
+	* this directory should be used as public root directory in your server config
   * `index.html` as entry point (no need to include js/css, they will automatically be injected by webpack).
 
 * all the compiled code will be put in `static/dist`
@@ -100,6 +103,7 @@ The following aliases are defined
 ```js
 // by default config.sourcePath points to `res`, you can override it in your config
 {
+	'@': config.sourcePath,
 	'res': config.sourcePath,
 	'js': path.join(config.sourcePath, 'js'),
 	'assets': path.join(config.sourcePath, 'assets'),
@@ -129,31 +133,13 @@ const config = {
 	// whether to generate source maps or not
 	sourceMap: true,
 
-	// what port to run the dev-server (with hot reloading)
-	devServerPort: 3001,
-
-	// what port the app server is running
-	appPort: 3000,
-
 	// whether to enable eslint or not
 	eslint: true,
-
-	// the paths to proxy on the dev-server
-	// only valid while running dev server, otherwise ignored
-	proxy: {
-		'/api': 'http://localhost:3000',
-		'/static': 'http://localhost:3000',
-		'/uploads': 'http://localhost:3000',
-	},
 
 	// entry points for webpack (relative to sourcePath)
 	entry: {
 		app: 'js/index.js',
 	},
-
-	// whether to open the browser automatically
-	// only valid while running dev server, otherwise ignored
-	openBrowser: true,
 
 	// html entry file, generated files will be auto-injected into this
 	entryHtml: 'index.html',
@@ -164,9 +150,9 @@ const config = {
 	// append hash of the file to the filename
 	appendHash: true,
 
-	// whether to uglify the output or not
+	// whether to minify the output or not
 	// false in developement, true in production
-	uglify: false,
+	minify: false,
 
 	// whether to pre gzip the files
 	// makes a .gz file for each bundle produced
@@ -175,8 +161,92 @@ const config = {
 	// whether to not display much info while running dev server
 	quiet: true,
 
-	// Browser targets for babel
-	babelTargets: { chrome: '58' },
+	// babel config
+	babel: {
+		// options for @babel/preset-env
+		// https://babeljs.io/docs/en/babel-preset-env.html
+		envOptions: {
+			// target these browsers
+			// default targets is based on browsers that support async-await
+			targets: {chrome: '55'},
+		},
+
+		// extra presets to include
+		includePresets: [],
+
+		// don't include these presets (if included by default)
+		excludePresets: [],
+
+		// extra plugins to include
+		includePlugins: [],
+
+		// don't include these plugins (if included by default)
+		excludePlugins: [],
+
+		// transform imports of the given modules to reduce code size
+		// see: https://www.npmjs.com/package/babel-plugin-transform-imports
+		transformImports: {},
+
+		// run babel in debug mode
+		debug: false,
+	},
+
+	// whether to generate analyzer report with the generated bundle
+	// false in development, true in production
+	analyzeBundle: false,
+
+	// whether this bundle is meant for server (vue ssr)
+	ssr: false,
+
+	// enable css modules support for all css files
+	// NOT: the following files already have module support regardless of this setting
+	//   <style module> in .vue
+	//   .module.css files
+	//   .css?module files
+	cssModules: false,
+
+	// dev server and hot reloading options
+	devServer: {
+		// dev server middlewares
+		before(app, server) {},
+		after(app, server) {},
+
+		// dev server host
+		host: '0.0.0.0',
+
+		// dev server port
+		port: 3001,
+
+		// use https
+		https: false,
+
+		// whether to open the web browser
+		open: true,
+
+		// what port the app server is running
+		appPort: 3000,
+
+		// the paths to proxy on the dev-server
+		proxy: {
+			'/api': 'http://localhost:<appPort>',
+			'/static': 'http://localhost:<appPort>',
+			'/uploads': 'http://localhost:<appPort>',
+		},
+
+		// notify using os-native notification whenever an error occurs
+		notifyOnError: true,
+	},
+
+	// overrides for production environment
+	$env_production: {
+		minify: true,
+		eslint: false,
+	},
+
+	// overrides for development environment
+	$env_development: {
+		eslint: true,
+	},
 };
 ```
 
@@ -190,8 +260,18 @@ const config = {
 	dest: 'dest/index.js',
 	library: 'vutils',
 	libraryFormat: 'es',
-	uglify: false,
+	minify: false,
 	sourceMap: false,
+
+	// overrides for production environment
+	$env_production: {
+		minify: true,
+	},
+
+	// overrides for development environment
+	$env_development: {
+		minify: false,
+	},
 };
 
 smWebpack.runRollup({config}).then(() => {
@@ -216,7 +296,7 @@ const config = {
 	libraryFormat: 'umd',
 
 	// whether to uglify the output
-	uglify: false,
+	minify: false,
 
 	// whether to generate a sourcemap or not
 	sourceMap: false,

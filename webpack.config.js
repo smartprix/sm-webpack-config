@@ -1,482 +1,116 @@
-/* eslint-disable */
-var _ = require('lodash');
-var path = require('path');
-var webpack = require('webpack');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var FriendlyErrors = require('friendly-errors-webpack-plugin');
-var OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-var opn = require("opn");
-const { VueLoaderPlugin } = require('vue-loader');
+/* eslint-disable global-require */
+const _ = require('lodash');
+const path = require('path');
+const webpack = require('webpack');
 const merge = require('webpack-merge');
+const openBrowser = require('opn');
 
-const WebpackDevServer = require('./dev-server');
-const utils = require('./utils');
-const postcssOptions = require('./postcss.config.js');
+const {getConfig, getRollupConfig} = require('./config/default');
+const {getOptimizationConfig} = require('./config/optimization');
+const {getPlugins} = require('./config/plugins');
+const {getLoaders} = require('./config/loaders');
+const getNodeConfig = require('./config/node');
+const {getDevServerConfig} = require('./config/devServer');
 
-const configDev = {
-	sourcePath: 'res',
-	destPath: '.',
-	publicUrl: '/',
-	sourceMap: true,
-	devServerPort: 3001,
-	appPort: 3000,
-	eslint: true,
-	openBrowser: true,
-	entry: {
-		app: 'js/index.js',
-	},
-	entryHtml: 'index.html',
-	appendHash: true,
-	library: false,
-	uglify: false,
-	rollup: false,
-	quiet: true,
-	babelTargets: { chrome: '58' },
-};
+function getDevTool(config) {
+	if (!config.sourceMap) return false;
+	if (config.isProduction) return '#source-map';
+	return '#eval-source-map';
+}
 
-const configProd = _.assign({}, configDev, {
-	sourceMap: false,
-	destPath: 'static/dist',
-	publicUrl: '/static/dist',
-	uglify: true,
-});
+function getFileName(config) {
+	if (config.library || !config.appendHash) return '[name].js';
+	// webpack does not support base62 encoding in contenthash yet
+	if (config.isProduction) return 'js/[name].[contenthash:7].js';
+	return 'js/[name].js';
+}
 
-const configRollup = {
-	entry: 'src/index.js',
-	dest: 'dist/index.js',
-	library: 'lib',
-	libraryFormat: 'umd',
-	uglify: false,
-	sourceMap: false,
-};
-
-const cwd = process.cwd();
-
-// polyfills required, object.assign, promise
-const babelOptions = {
-	babelrc: false,
-	presets: [
-		[
-			require.resolve("@babel/preset-env"),
-			{ "loose": true, "modules": false },
-		],
-	],
-	plugins: [
-		// stage 3
-		require.resolve('@babel/plugin-syntax-dynamic-import'),
-		require.resolve('@babel/plugin-syntax-import-meta'),
-		require.resolve('@babel/plugin-proposal-json-strings'),
-
-		// vue
-		require.resolve("babel-plugin-transform-vue-jsx"),
-		require.resolve("babel-plugin-jsx-v-model"),
-
-		// esnext
-		require.resolve("@babel/plugin-proposal-optional-catch-binding"),
-		[
-        	require.resolve("@babel/plugin-proposal-class-properties"),
-        	{ "loose": true },
-		],
-		[
-			require.resolve("@babel/plugin-proposal-optional-chaining"),
-			{ "loose": true },
-		],
-		[
-			require.resolve("@babel/plugin-proposal-nullish-coalescing-operator"),
-			{ "loose": true },
-		],
-	],
-};
-
-// object is {env, config, webpackConfig}
+// options is {env, config, webpackConfig}
 // env can be developement or production
-// config gets merged into our configuration (configDev or configProd)
+// config gets merged into our default config
 // webpackConfig gets merged into final webpack config
-function getWebpackConfig(object) {
-	const env = object.env || process.env.NODE_ENV || 'development';
+function getWebpackConfig(options = {}) {
+	const env = options.env || process.env.NODE_ENV || 'development';
 
-	const isProduction = env === 'production';
+	const config = getConfig(options.config, env);
+	options.config._final = config;
+	const webpackConfig = options.webpackConfig || {};
+
+	const isProduction = config.isProduction;
 
 	// correct NODE_ENV is important for vue-loader to correctly minify files
-	process.env.NODE_ENV = isProduction ? 'production' : env;
+	process.env.NODE_ENV = isProduction ? 'production' : 'development';
 
-	let config = isProduction ? configProd : configDev;
-	if (object.config) {
-		config = _.assign({}, config, object.config);
-	}
-
-	const webpackConfig = object.webpackConfig || {};
+	const cwd = config.cwd;
 
 	config.sourcePath = path.join(cwd, config.sourcePath);
 	config.destPath = path.join(cwd, config.destPath);
 
-	// append / to the end of publicUrl, webpack outputs wrong urls otherwise
-	if (!config.publicUrl.endsWith('/')) {
-		config.publicUrl += '/';
-	}
-
 	const entry = {};
-	_.forEach(config.entry, function(value, key) {
+	_.forEach(config.entry, (value, key) => {
 		entry[key] = path.join(config.sourcePath, value);
 	});
 
-	const styleLoaders = utils.styleLoaders({
-		sourceMap: config.sourceMap,
-		extract: isProduction ? true : false,
-		minify: isProduction ? true : false,
-	});
-
-	const vueLoaders = utils.cssLoaders({
-		sourceMap: config.sourceMap,
-		extract: isProduction ? true : false,
-		minify: isProduction ? true : false,
-	});
-
-	babelOptions.presets[0][1].targets = config.babelTargets || {chrome: '58'};
-
-	vueLoaders.js = 'babel-loader?' + JSON.stringify(babelOptions);
-
-	let jsLoader = {
-		test: /\.jsx?$/,
-		loader: 'babel-loader',
-		exclude: function (path) {
-			if (path.includes('.vue')) return false;
-			if (path.includes('node_modules')) return true;
-			return false;
-		},
-		options: babelOptions,
-	};
-
-	if (config.rollup) {
-		jsLoader = {
-			test: /\.jsx?$/,
-			loader: 'rollup-loader',
-			include: config.sourcePath,
-			exclude: [/node_modules/],
-			options: {
-				plugins: [
-					require('rollup-plugin-babel')({
-						exclude: 'node_modules/**',
-						babelrc: false,
-						presets: babelOptions.presets,
-						plugins: babelOptions.plugins,
-					}),
-				],
-			},
-		};
-	}
-
 	const baseConfig = {
+		target: 'web',
 		mode: isProduction ? 'production' : 'development',
-		entry: entry,
-
+		context: cwd,
+		entry,
 		output: {
 			path: config.destPath,
 			publicPath: config.publicUrl,
-			filename: (config.library || !config.appendHash) ? '[name].js' : 'js/[name].js'
+			filename: getFileName(config),
+			chunkFilename: getFileName(config),
 		},
-
 		resolve: {
-			extensions: ['.js', '.jsx', '.vue', '.json'],
-			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
+			extensions: ['.wasm', '.mjs', '.js', '.mjsx', '.jsx', '.vue', '.json'],
+			modules: [
+				path.join(cwd, 'node_modules'),
+				path.join(__dirname, 'node_modules'),
+			],
 			alias: {
-				'res': config.sourcePath,
-				'js': path.join(config.sourcePath, 'js'),
-				'assets': path.join(config.sourcePath, 'assets'),
-				'components': path.join(config.sourcePath, 'js', 'components'),
-				'css': path.join(config.sourcePath, 'css'),
-				'img': path.join(config.sourcePath, 'img'),
+				'@': config.sourcePath,
+				res: config.sourcePath,
+				js: path.join(config.sourcePath, 'js'),
+				assets: path.join(config.sourcePath, 'assets'),
+				components: path.join(config.sourcePath, 'js', 'components'),
+				css: path.join(config.sourcePath, 'css'),
+				img: path.join(config.sourcePath, 'img'),
 			},
 		},
-
 		resolveLoader: {
-			modules: [path.join(cwd, 'node_modules'), path.join(__dirname, 'node_modules')],
+			modules: [
+				path.join(cwd, 'node_modules'),
+				path.join(__dirname, 'node_modules'),
+			],
 		},
-
 		module: {
-			// don't parse these modules as they are not made for webpack
-			noParse: /node_modules(.*)\/firepad/,
-			rules: [
-				{
-					test: /\.vue$/,
-					loader: 'vue-loader',
-					options: {},
-				},
-
-				jsLoader,
-
-				{
-					test: /\.json$/,
-					loader: 'json-loader',
-				},
-
-				{
-					test: /\.ejs$/,
-					loader: 'ejs-loader',
-				},
-
-				{
-					test: /\.(ico)(\?.*)?$/,
-					loader: 'file-loader',
-					options: {
-						outputPath: 'files/',
-						name: '[name].[hash:base64:5].[ext]',
-					},
-				},
-
-				{
-					test: /\.(png|jpe?g|webp|gif|svg)(\?.*)?$/,
-					use: [{
-						loader: 'url-loader',
-						options: {
-							limit: 3000,
-							fallback: 'file-loader',
-							outputPath: 'img/',
-							name: '[name].[hash:base64:5].[ext]',
-						}
-					}],
-				},
-
-				{
-					test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-					use: [{
-						loader: 'url-loader',
-						options: {
-							limit: 3000,
-							fallback: 'file-loader',
-							outputPath: 'fonts/',
-							name: '[name].[hash:base64:5].[ext]',
-						}
-					}],
-				},
-			]
+			// don't parse these modules to speed up things
+			noParse: /node_modules(.*)\/(firepad|jquery)\//,
+			rules: getLoaders(config),
 		},
-
-		node: {
-			console: false,
-			global: true,
-			process: false,
-			Buffer: false,
-			__filename: "mock",
-			__dirname: "mock",
-			setImmediate: false,
-		},
-
-		optimization: {
-			minimize: false,
-			runtimeChunk: 'single',
-			nodeEnv: isProduction ? 'production' : 'development',
-			splitChunks: {
-				chunks: 'all',
-				name: true,
-				cacheGroups: {
-					vendors: {
-						test: /[\\/]node_modules[\\/]/,
-						priority: -10,
-					},
-					default: {
-						minChunks: 2,
-						priority: -20,
-						reuseExistingChunk: true,
-					},
-				}
-			}
-		},
-
-		plugins: [
-			new webpack.DefinePlugin({
-				'process.env': {
-					NODE_ENV: JSON.stringify(isProduction ? 'production' : 'development'),
-				},
-			}),
-
-			// vue loader plugin is required for vue files
-			new VueLoaderPlugin(),
-		],
-	}
+		node: getNodeConfig(config),
+		optimization: getOptimizationConfig(config),
+		plugins: getPlugins(config),
+		devtool: getDevTool(config),
+	};
 
 	if (config.library) {
-		baseConfig.output.libraryTarget = config.libraryFormat || "umd";
+		baseConfig.output.libraryTarget = config.libraryFormat || 'umd';
 		baseConfig.output.umdNamedDefine = true;
 		baseConfig.output.library = config.library === true ? 'Lib' : config.library;
 	}
 
-	if (config.eslint) {
-		baseConfig.module.rules.push({
-			test: /\.(vue|js)$/,
-			loader: 'eslint-loader',
-			include: config.sourcePath,
-			exclude: /node_modules/,
-			enforce: 'pre',
-			options: {
-				formatter: require('eslint-friendly-formatter'),
-			}
-		});
-	}
-
-	if (config.uglify) {
-		baseConfig.optimization.minimize = true;
-	}
-
-	if (config.gzip) {
-		var CompressionWebpackPlugin = require('compression-webpack-plugin');
-
-		baseConfig.plugins.push(
-			new CompressionWebpackPlugin({
-				asset: '[path].gz[query]',
-				algorithm: 'gzip',
-				test: new RegExp(
-					'\\.(' +
-					['js', 'css'].join('|') +
-					')$'
-				),
-				threshold: 10240,
-				minRatio: 0.8
-			})
-		);
-	}
-
 	if (!isProduction) {
-		// add hot-reload related code to entry chunks
-		Object.keys(baseConfig.entry).forEach(function (name) {
-			baseConfig.entry[name] = [path.join(__dirname, 'dev-client')].concat(baseConfig.entry[name]);
-		});
+		// for working with hmr in web workers
+		// https://github.com/webpack/webpack/issues/6642
+		baseConfig.output.globalObject = 'this';
 
-		const devWebpackConfig = {
-			devServer: {
-				inline: true,
-			},
-			performance: {
-				hints: false,
-			},
-			module: {
-				rules: _.values(styleLoaders),
-			},
-			// eval-source-map is faster for development
-			devtool: config.sourceMap ? '#eval-source-map' : false,
-			plugins: [
-				// all plugins are required for hot module replacement
-				// https://github.com/glenjamin/webpack-hot-middleware#installation--usage
-				new webpack.optimize.OccurrenceOrderPlugin(),
-				new webpack.HotModuleReplacementPlugin(),
-
-				new webpack.ProvidePlugin({
-					// Automtically detect jQuery and $ as free var in modules
-					// and inject the jquery library
-					// This is required by many jquery plugins
-					jQuery: "jquery",
-					$: "jquery"
-				}),
-
-				// Friendly Errors
-				new FriendlyErrors(),
-			],
-		};
-
-		if (!config.library && config.entryHtml) {
-			devWebpackConfig.plugins.push(
-				// https://github.com/ampedandwired/html-webpack-plugin
-				new HtmlWebpackPlugin({
-					filename: `${config.entryHtml}`,
-					template: path.join(config.sourcePath, config.entryHtml),
-					inject: true,
-				})
-			);
-		}
-
-		// Developement Config
-		return merge(baseConfig, devWebpackConfig, webpackConfig);
+		// disable performace hints
+		baseConfig.performance = {hints: false};
 	}
 
-	const prodWebpackConfig = {
-		module: {
-			rules: _.values(styleLoaders),
-		},
-
-		devtool: config.sourceMap ? '#source-map' : false,
-		output: {
-			filename: (config.library || !config.appendHash) ? '[name].js' : 'js/[name].[chunkhash:7].js',
-			chunkFilename: (config.library || !config.appendHash) ? '[name].[id].js' : 'js/[name].[id].[chunkhash:7].js',
-		},
-
-		plugins: [
-			// clean the dist folder
-			new CleanWebpackPlugin(config.destPath, {
-				root: process.cwd(),
-			}),
-
-			new webpack.ProvidePlugin({
-				// Automtically detect jQuery and $ as free var in modules
-				// and inject the jquery library
-				// This is required by many jquery plugins
-				jQuery: "jquery",
-				$: "jquery"
-			}),
-		],
-	};
-
-	if (!config.library) {
-		if (config.entryHtml) {
-			prodWebpackConfig.plugins.push(
-				// generate dist index.html with correct asset hash for caching.
-				// you can customize output by editing /index.html
-				// see https://github.com/ampedandwired/html-webpack-plugin
-				new HtmlWebpackPlugin({
-					filename: `${config.entryHtml}`,
-					template: path.join(config.sourcePath, config.entryHtml),
-					inject: true,
-					minify: {
-						removeComments: true,
-						collapseWhitespace: true,
-						// more options:
-						// https://github.com/kangax/html-minifier#options-quick-reference
-					},
-					// necessary to consistently work with multiple chunks via CommonsChunkPlugin
-					chunksSortMode: 'dependency'
-				})
-			);
-		}
-
-		prodWebpackConfig.plugins = prodWebpackConfig.plugins.concat([
-			// remove all momentjs locale except for the en-gb locale
-			// this helps in reducing momentjs size by quite a bit
-			new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en-gb/),
-
-			new webpack.optimize.OccurrenceOrderPlugin(),
-
-			// extract css into its own file
-			new ExtractTextPlugin({
-				filename: 'css/[name].[contenthash:base64:5].css',
-				allChunks: true,
-			}),
-
-			// minify extracted css
-			new OptimizeCssAssetsPlugin({
-				cssProcessorOptions: {
-					discardComments: {
-						removeAll: true,
-					},
-				},
-				canPrint: true,
-			}),
-
-			// generate bundle size stats so we can analyze them
-			// to see which dependecies are the heaviest
-			new BundleAnalyzerPlugin({
-				analyzerMode: 'static',
-				reportFilename: 'webpack.report.html',
-				generateStatsFile: true,
-				statsFilename: 'webpack.stats.json',
-				openAnalyzer: false,
-			}),
-		]);
-	}
-
-	// Production Config
-	return merge(baseConfig, prodWebpackConfig, webpackConfig);
+	return merge(baseConfig, webpackConfig);
 }
 
 function getProdConfig({config, webpackConfig}) {
@@ -488,20 +122,18 @@ function getDevConfig({config, webpackConfig}) {
 }
 
 function runWebpack({env, config, webpackConfig}) {
-	return new Promise(function(resolve, reject) {
+	const formatStats = require('./util/formatStats');
+	return new Promise((resolve, reject) => {
 		const finalWebpackConfig = getWebpackConfig({env, config, webpackConfig});
 
 		// run webpack
-		webpack(finalWebpackConfig, function(err, stats) {
-			if(err) throw new Error(err);
-			console.log(stats.toString({
-				colors: true,
-				chunks: false,
-				chunkModules: false,
-				modules: false,
-				children: false,
-			}));
+		webpack(finalWebpackConfig, (err, stats) => {
+			if (err) {
+				reject(err);
+				return;
+			}
 
+			console.log(formatStats(stats, config.destPath));
 			resolve();
 		});
 	});
@@ -516,68 +148,78 @@ function runProdWebpack({config = {}, webpackConfig = {}} = {}) {
 }
 
 function runDevServer({config = {}, webpackConfig = {}} = {}) {
-	return new Promise(function(resolve, reject) {
-		const devConfig = _.assign({}, configDev, config);
+	// eslint-disable-next-line
+	const WebpackDevServer = require('webpack-dev-server');
 
-		// destPath will always be . & publicUrl will always be / in case of dev server
-		devConfig.destPath = '.';
-		devConfig.publicUrl = '/';
-		devConfig.devServer = true;
+	const finalConfig = getConfig(config, 'development');
+	finalConfig.isDevServer = true;
+	finalConfig.destPath = '.';
+	finalConfig.publicUrl = '/';
 
-		const finalWebpackConfig = getWebpackConfig({
-			env: 'development',
-			config: devConfig,
-			webpackConfig
-		});
+	const devServerConfig = getDevServerConfig(finalConfig);
+	const finalWebpackConfig = getWebpackConfig({
+		env: 'development',
+		devServer: true,
+		config: finalConfig,
+		webpackConfig,
+	});
 
-		const devServerConfig = {
-			webpackConfig: finalWebpackConfig,
-			publicUrl: devConfig.publicUrl,
-			proxy: {
-				"/api": "http://localhost:" + devConfig.appPort,
-				"/static": "http://localhost:" + devConfig.appPort,
-				"/uploads": "http://localhost:" + devConfig.appPort,
-			},
-			quiet: devConfig.quiet,
-		};
+	// add hot-reload related code to entry chunks
+	WebpackDevServer.addDevServerEntrypoints(finalWebpackConfig, {
+		contentBase: devServerConfig.contentBase,
+		hot: true,
+		host: 'localhost',
+	});
 
-		if (configDev.proxy) {
-			devServerConfig['proxy'] = devConfig.proxy;
+	let isFirstCompile = true;
+	const compiler = webpack(finalWebpackConfig);
+	compiler.hooks.done.tap('sm-webpack-dev-server', (stats) => {
+		if (stats.hasErrors()) return;
+
+		if (isFirstCompile) {
+			isFirstCompile = false;
+			if (finalConfig.openBrowser) {
+				const port = devServerConfig.port;
+				const protocol = devServerConfig.https ? 'https' : 'http';
+				openBrowser(`${protocol}://localhost:${port}`);
+			}
 		}
+	});
 
-		const url = "http://localhost:" + devConfig.devServerPort;
+	// Start a webpack-dev-server
+	const server = new WebpackDevServer(compiler, devServerConfig);
 
-		// Start a webpack-dev-server
-		WebpackDevServer(devServerConfig, () => console.log("[webpack-dev-server]", url))
-			.listen(devConfig.devServerPort, "0.0.0.0", function(err) {
-				if(err) throw new Error(err);
+	return new Promise((resolve, reject) => {
+		server.listen(devServerConfig.port, devServerConfig.host, (err) => {
+			if (err) {
+				reject(err);
+				return;
+			}
 
-				if (devConfig.openBrowser) {
-					opn(url);
-				}
-
-				resolve();
-			});
+			resolve();
+		});
 	});
 }
 
-function runRollup({config = {}, rollupConfig = {}} = {}) {
+function runRollup(options = {}) {
 	const rollup = require('rollup');
-	config = _.assign({}, configRollup, config);
+
+	const env = process.env.NODE_ENV || 'production';
+	const config = getRollupConfig(options.config || {}, env);
+	const cwd = config.cwd;
 
 	config.entry = path.resolve(cwd, config.entry);
 	config.dest = path.resolve(cwd, config.dest);
 
+	const {getBabelConfig} = require('./config/babel');
 	const plugins = [
 		require('rollup-plugin-babel')({
 			exclude: 'node_modules/**',
-			babelrc: false,
-			presets: babelOptions.presets,
-			plugins: babelOptions.plugins,
+			...getBabelConfig(config),
 		}),
 	];
 
-	if (config.uglify) {
+	if (config.minify) {
 		plugins.push(
 			require('rollup-plugin-uglify')()
 		);
@@ -585,14 +227,14 @@ function runRollup({config = {}, rollupConfig = {}} = {}) {
 
 	return rollup.rollup({
 		entry: config.entry,
-		plugins: plugins,
-	}).then(function (bundle) {
+		plugins,
+	}).then((bundle) => {
 		bundle.write({
-			format: config.libraryFormat || "umd",
+			format: config.libraryFormat || 'umd',
 			moduleName: config.library === true ? 'Lib' : config.library,
 			dest: config.dest,
 			sourceMap: config.sourceMap,
-      	});
+		});
 	});
 }
 
@@ -605,4 +247,4 @@ module.exports = {
 	runProdWebpack,
 	runDevServer,
 	runRollup,
-}
+};

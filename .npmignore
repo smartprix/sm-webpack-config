@@ -53,3 +53,7 @@ env.*
 # Lock files (this is a library)
 package-lock.json
 yarn.lock
+
+# Extra files
+.editorconfig
+.gitignore

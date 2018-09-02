@@ -1,4 +1,4 @@
-const cssnext = require('postcss-cssnext');
+const postcssPresetEnv = require('postcss-preset-env');
 const simpleVars = require('postcss-simple-vars');
 const nested = require('postcss-nested');
 const mixins = require('postcss-mixins');
@@ -17,7 +17,7 @@ module.exports = {
 		cssImport(),
 		simpleVars(),
 		atVariables({
-			atRules: ['for', 'if', 'else', 'each', 'media', 'custom-media', 'import', 'supports']
+			atRules: ['for', 'if', 'else', 'each', 'media', 'custom-media', 'import', 'supports'],
 		}),
 		atEach(),
 		atFor(),
@@ -26,22 +26,20 @@ module.exports = {
 			shortcuts: {
 				component: 'b',
 				modifier: 'm',
-				descendent: 'e'
+				descendent: 'e',
 			},
 			separators: {
 				descendent: '__',
 				modifier: '--',
 			},
 		}),
-		cssnext({
-			browsers: ['ie > 8', 'last 2 versions', '> 2%'],
+		postcssPresetEnv({
+			browsers: '> 1%, last 2 versions, Firefox ESR, not dead',
+			stage: 0,
 			features: {
-				calc: {
-					mediaQueries: true,
-					selectors: true,
-				},
+				// we are already using postcss-nested
+				'nesting-rules': false,
 			},
-			warnForDuplicates: false,
 		}),
 		mixins(),
 		atExtend(),

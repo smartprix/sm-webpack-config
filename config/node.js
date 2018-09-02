@@ -1,0 +1,17 @@
+module.exports = () => ({
+	console: false,
+	global: true,
+	process: false,
+	__filename: 'mock',
+	__dirname: 'mock',
+	Buffer: false,
+	setImmediate: false,
+	dns: false,
+	fs: false,
+	path: false,
+	url: false,
+	net: false,
+	tls: false,
+	dgram: false,
+	child_process: false,
+});
