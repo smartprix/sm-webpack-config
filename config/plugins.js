@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
@@ -46,7 +47,6 @@ function getHtmlWebpackPlugin(config = {}) {
 }
 
 function getCompressionPlugin() {
-	// eslint-disable-next-line
 	const CompressionWebpackPlugin = require('compression-webpack-plugin');
 
 	const ext = ['js', 'css', 'xml', 'json', 'ttf', 'svg'];
@@ -62,7 +62,6 @@ function getCompressionPlugin() {
 }
 
 function getBundleAnalyzerPlugin(config) {
-	// eslint-disable-next-line
 	const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
 	// generate bundle size stats so we can analyze them
@@ -92,20 +91,9 @@ function getDevelopmentPlugins() {
 function getNamedChunksPlugin() {
 	// keep chunk ids stable so async chunks have consistent hash (#1916)
 	// Taken from: https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/config/app.js
-	const seen = new Set();
-	const nameLength = 4;
 	return new webpack.NamedChunksPlugin((chunk) => {
 		if (chunk.name) return chunk.name;
-
-		const modules = Array.from(chunk.modulesIterable);
-		if (modules.length <= 1) return modules[0].id;
-
-		const hash = require('hash-sum'); // eslint-disable-line
-		const joinedHash = hash(modules.map(m => m.id).join('_'));
-		let len = nameLength;
-		while (seen.has(joinedHash.substr(0, len))) len++;
-		seen.add(joinedHash.substr(0, len));
-		return `chunk-${joinedHash.substr(0, len)}`;
+		return 'chunk-' + Array.from(chunk.modulesIterable, m => m.id).join('_');
 	});
 }
 
@@ -123,6 +111,7 @@ function getProductionPlugins(config) {
 			root: process.cwd(),
 			// perform clean just before files are emitted to the output dir
 			beforeEmit: true,
+			verbose: false,
 		}),
 
 		// remove all momentjs locale except for the en-gb locale
@@ -198,6 +187,16 @@ function getCopyPlugin(config) {
 	]);
 }
 
+function getProgressPlugin() {
+	if (process.stdout.isTTY) {
+		return new GhostProgressPlugin();
+	}
+
+	// simple progress for non-tty environments
+	const SimpleProgressPlugin = require('../util/simpleProgress');
+	return SimpleProgressPlugin();
+}
+
 function getPlugins(config = {}) {
 	const plugins = [];
 
@@ -210,12 +209,10 @@ function getPlugins(config = {}) {
 
 		// better errors
 		getFriendlyErrorsPlugin(config),
-	);
 
-	// Display progress in tty environments
-	if (process.stdout.isTTY) {
-		plugins.push(new GhostProgressPlugin({format: 'compact'}));
-	}
+		// progress
+		getProgressPlugin(config),
+	);
 
 	// copy public assets if not dev server
 	if (!config.isDevServer) {
