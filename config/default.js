@@ -43,6 +43,12 @@ const devServer = {
 		'/uploads': 'http://localhost:<appPort>',
 	},
 	notifyOnError: true,
+	buildSSR: true,
+};
+
+const ssr = {
+	entry: 'js/index-server.js',
+	sourceMap: true,
 };
 
 const configRollup = {
@@ -87,6 +93,18 @@ function getConfig(config, env) {
 
 	// save open as openBrowser, as open will get changed
 	finalConfig.openBrowser = finalConfig.devServer.open;
+
+	// ssr
+	if (config.ssr) {
+		let ssrConfig = config.ssr;
+		if (ssrConfig === true) {
+			ssrConfig = ssr;
+		}
+
+		// ssr config needs to be merged separately
+		finalConfig.ssr = Object.assign({}, ssr, ssrConfig);
+		finalConfig.hasSSR = true;
+	}
 
 	return finalConfig;
 }

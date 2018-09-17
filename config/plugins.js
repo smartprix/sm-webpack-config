@@ -105,19 +105,7 @@ function getCSSFileName(config) {
 }
 
 function getProductionPlugins(config) {
-	return [
-		// clean the dist folder
-		new CleanWebpackPlugin(config.destPath, {
-			root: process.cwd(),
-			// perform clean just before files are emitted to the output dir
-			beforeEmit: true,
-			verbose: false,
-		}),
-
-		// remove all momentjs locale except for the en-gb locale
-		// this helps in reducing momentjs size by quite a bit
-		new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /en-gb/),
-
+	const plugins = [
 		// extract css into its own file
 		// MiniCssExtractPlugin does not support base62 hash yet
 		new MiniCssExtractPlugin({
@@ -128,6 +116,30 @@ function getProductionPlugins(config) {
 		// keep module.id stable when vendor modules does not change
 		new webpack.HashedModuleIdsPlugin(),
 	];
+
+	if (!config.isSSR) {
+		plugins.push(
+			// clean the dist folder
+			new CleanWebpackPlugin(config.destPath, {
+				root: process.cwd(),
+				// perform clean just before files are emitted to the output dir
+				beforeEmit: true,
+				verbose: false,
+				// don't remove the ssr server bundle
+				exclude: [
+					'vue-ssr-server-bundle.json',
+					'server-bundle.json',
+					'server-bundle.js',
+				],
+			}),
+
+			// remove all momentjs locale except for the en-gb locale
+			// this helps in reducing momentjs size by quite a bit
+			new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /en-gb/),
+		);
+	}
+
+	return plugins;
 }
 
 function getDevServerMessages(config) {
@@ -197,6 +209,24 @@ function getProgressPlugin() {
 	return SimpleProgressPlugin();
 }
 
+function getSSRPlugins(config) {
+	const VueSSRServerPlugin = require('vue-server-renderer/server-plugin');
+	const env = config.isProduction ? 'production' : 'development';
+	return [
+		new webpack.DefinePlugin({
+			'process.env.NODE_ENV': JSON.stringify(env),
+			'process.env.VUE_ENV': JSON.stringify('server'),
+			window: 'undefined',
+		}),
+
+		// This is the plugin that turns the entire output of the server build
+		// into a single JSON file.
+		new VueSSRServerPlugin({
+			filename: 'vue-ssr-server-bundle.json',
+		}),
+	];
+}
+
 function getPlugins(config = {}) {
 	const plugins = [];
 
@@ -214,21 +244,43 @@ function getPlugins(config = {}) {
 		getProgressPlugin(config),
 	);
 
-	// copy public assets if not dev server
-	if (!config.isDevServer) {
-		plugins.push(getCopyPlugin(config));
+	// these plugins are not needed for SSR
+	if (!config.isSSR) {
+		// copy public assets if not dev server
+		if (!config.isDevServer) {
+			plugins.push(getCopyPlugin(config));
+		}
+
+		if (!config.library && config.entryHtml) {
+			plugins.push(getHtmlWebpackPlugin(config));
+		}
+
+		if (config.gzip) {
+			plugins.push(getCompressionPlugin(config));
+		}
+
+		if (config.analyzeBundle) {
+			plugins.push(getBundleAnalyzerPlugin(config));
+		}
 	}
 
-	if (!config.library && config.entryHtml) {
-		plugins.push(getHtmlWebpackPlugin(config));
+	if (config.isSSR) {
+		plugins.push(...getSSRPlugins(config));
 	}
 
-	if (config.gzip) {
-		plugins.push(getCompressionPlugin(config));
-	}
-
-	if (config.analyzeBundle) {
-		plugins.push(getBundleAnalyzerPlugin(config));
+	// if we are given ssr config, we would want to inject the plugin into client bundle
+	if (config.hasSSR && !config.isSSR) {
+		// This plugins generates `vue-ssr-client-manifest.json` in the
+		// output directory.
+		// With the client manifest and the server bundle,
+		// the renderer now has information of both the server and client builds,
+		// so it can automatically infer and inject
+		// preload / prefetch directives and css links / script tags
+		// into the rendered HTML.
+		const VueSSRClientPlugin = require('vue-server-renderer/client-plugin');
+		plugins.push(new VueSSRClientPlugin({
+			filename: 'vue-ssr-client-manifest.json',
+		}));
 	}
 
 	if (config.isProduction) {

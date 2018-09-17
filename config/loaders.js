@@ -4,7 +4,17 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const {getBabelConfig} = require('./babel');
 
 function getCacheConfig(config, id, options = {}) {
-	const cacheDirectory = path.join(config.cwd, 'node_modules', '.cache', 'sm-webpack', id);
+	let cacheDirectory = path.join(
+		config.cwd,
+		'node_modules',
+		'.cache',
+		'sm-webpack',
+		id
+	);
+
+	if (config.isSSR) {
+		cacheDirectory = path.join(cacheDirectory, 'ssr');
+	}
 
 	const modules = options.modules || [];
 	modules.push('cache-loader');
@@ -136,7 +146,7 @@ function getUrlFileLoader(config, options = {}) {
 				fallback: 'file-loader',
 				outputPath: options.outputPath,
 				name: `[name]${getFileHash(config, options)}.[ext]`,
-				emitFile: !config.ssr,
+				emitFile: !config.isSSR,
 			},
 		}],
 	};
@@ -149,7 +159,7 @@ function getFileLoader(config, options = {}) {
 		options: {
 			outputPath: options.outputPath,
 			name: `[name]${getFileHash(config, options)}.[ext]`,
-			emitFile: !config.ssr,
+			emitFile: !config.isSSR,
 		},
 	};
 }
@@ -244,7 +254,18 @@ function getStyleLoader(loaders, options = {}, config) {
 	}].concat(sourceLoaders);
 }
 
+function getSSRStyleLoaders() {
+	return [{
+		test: /\.(styl(us)?|(post|p|s)?css|less|sass)$/,
+		loader: 'null-loader',
+	}];
+}
+
 function getStyleLoaders(config) {
+	if (config.isSSR) {
+		return getSSRStyleLoaders();
+	}
+
 	const loaders = {
 		'css|postcss|pcss': [['postcss', {
 			config: {path: __dirname},

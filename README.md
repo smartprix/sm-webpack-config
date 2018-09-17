@@ -197,8 +197,17 @@ const config = {
 	// analyzeBundle: {openAnalyzer: true, generateStatsFile: true}
 	analyzeBundle: false,
 
-	// whether this bundle is meant for server (vue ssr)
-	ssr: false,
+	// whether to build a vue ssr bundle too
+	// default is false
+	// can be boolean true / false, or an object
+	// ssr: false,
+	ssr: {
+		// entry file of ssr bundle
+		entry: 'js/index-server.js',
+
+		// whether to generate source maps for ssr bundle
+		sourceMap: true,
+	},
 
 	// enable css modules support for all css files
 	// NOT: the following files already have module support regardless of this setting
@@ -237,6 +246,10 @@ const config = {
 
 		// notify using os-native notification whenever an error occurs
 		notifyOnError: true,
+
+		// build the ssr bundle too when running dev server
+		// config.ssr must be set too
+		buildSSR: true,
 	},
 
 	// overrides for production environment

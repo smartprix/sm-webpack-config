@@ -3,7 +3,21 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const splitChunks = require('./splitChunks');
 const uglifyOptions = require('./uglify');
 
+function getSSROptimizationConfig() {
+	// ssr does not need any kind of optimization
+	return {
+		minimize: false,
+		noEmitOnErrors: true,
+		mangleWasmImports: false,
+		splitChunks: false,
+	};
+}
+
 function getOptimizationConfig(config = {}) {
+	if (config.isSSR) {
+		return getSSROptimizationConfig();
+	}
+
 	const optimization = {
 		minimize: config.minify || false,
 		minimizer: [
