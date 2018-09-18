@@ -2,16 +2,29 @@ const path = require('path');
 const launchEditorMiddleware = require('launch-editor-middleware');
 
 function getDevServerConfig(config) {
-	const devServerOpts = config.devServer || {};
+	const isSSR = config.hasSSR && config.devServer.buildSSR;
+	const devServerOpts = Object.assign({}, config.devServer || {});
 
 	const before = devServerOpts.before;
 	const after = devServerOpts.after;
+
+	const ssrOpts = isSSR ? {
+		index: '',
+		historyApiFallback: false,
+		proxy: {
+			context: () => true,
+			target: `http://localhost:${devServerOpts.appPort}`,
+			ws: true,
+			changeOrigin: true,
+		},
+	} : {};
 
 	delete devServerOpts.before;
 	delete devServerOpts.after;
 	delete devServerOpts.appPort;
 	delete devServerOpts.notifyOnError;
 	delete devServerOpts.open;
+	delete devServerOpts.buildSSR;
 
 	return Object.assign({
 		host: '0.0.0.0',
@@ -47,7 +60,7 @@ function getDevServerConfig(config) {
 				after(app, server);
 			}
 		},
-	}, devServerOpts);
+	}, devServerOpts, ssrOpts);
 }
 
 module.exports = {

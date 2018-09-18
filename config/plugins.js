@@ -130,6 +130,8 @@ function getProductionPlugins(config) {
 					'vue-ssr-server-bundle.json',
 					'server-bundle.json',
 					'server-bundle.js',
+					'vue-ssr-client-manifest.json',
+					'client-manifest.json',
 				],
 			}),
 
