@@ -265,8 +265,80 @@ const config = {
 };
 ```
 
+## SSR (Server Side Rendering)
+`sm-webpack-config` includes support for Vue SSR. Everything should work if you set the `config.ssr` option. Building will give bundles for both server side and client side.
+
+Default bundle file names are as given by vue.
+**Server Bundle:** `vue-ssr-server-bundle.json`
+**Client Manifest**: `vue-ssr-client-manifest.json`
+
+You'll need to use `createBundleRenderer` from `vue-server-renderer` for SSR. For more details see [Vue SSR docs](https://ssr.vuejs.org/guide/bundle-renderer.html#enter-bundlerenderer)
+
+#### Running Dev Server With SSR
+Running dev server with ssr support is a bit tricky. You'll need to use your own server and koa middleware provided by `sm-webpack-config` to set it up. `koaDevServer` fires a `vue-ssr` event with `{serverBundle, clientManifest}` as parameters whenever a new ssr bundle is ready.
+
+Here's a quick example
+```js
+const Koa = require('koa');
+const {createBundleRenderer} = require('vue-server-renderer');
+const {koaDevServer} = require('sm-webpack-config');
+
+const app = new Koa();
+
+const template = fs.readFileSync('./res/index.html', 'utf-8');
+function createRenderer(bundle, clientManifest) {
+	const options = {
+		clientManifest,
+		template,
+		runInNewContext: false,
+	};
+	return createBundleRenderer(bundle, options);
+}
+
+const buildConfig = {
+	// your build config
+	entry: {
+		app: 'js/index-client.js',
+	},
+	devServer: {
+		port: 3002,
+		appPort: 3000,
+	},
+	ssr: {
+		entry: 'js/index-server.js',
+		sourceMap: true,
+	},
+};
+
+const devServer = koaDevServer({
+	config: buildConfig,
+});
+
+let renderer;
+// dev server fires vue ssr event whenever a new bundle is generated
+// we replace the renderer each time it is fired (hot loading)
+devServer.on('vue-ssr', ({serverBundle, clientManifest}) => {
+	renderer = createRenderer(serverBundle, clientManifest);
+});
+const renderToString = (...args) => {
+	if (!renderer) return 'Waiting to generate renderer...';
+	return renderer.renderToString(...args);
+};
+
+app.use(devServer.middleware());
+app.use(async (ctx, next) => {
+	const ssrContext = {url: ctx.url};
+	ctx.body = await renderToString(ssrContext);
+});
+
+app.listen(3000);
+```
+
+**For a more complete setup with production + dev server ssr, see [SSR Example](examples/ssr)**
+
+
 # Rollup
-sm-webpack-config also includes rollup. You can use it as:
+`sm-webpack-config` also includes rollup. You can use it as:
 ```js
 const smWebpack = require('sm-webpack-config');
 
@@ -294,7 +366,7 @@ smWebpack.runRollup({config}).then(() => {
 });
 ```
 
-#### Configuration Options
+#### Rollup Configuration Options
 ```js
 const config = {
 	// entry point of the script (source)

@@ -1,14 +1,12 @@
 /* eslint-disable global-require */
 const path = require('path');
 const webpack = require('webpack');
-const openBrowser = require('opn');
 const chalk = require('chalk');
-const fs = require('fs');
-const makeDir = require('make-dir');
 
 const {getWebpackConfig} = require('./config/webpack');
 const {getConfig, getRollupConfig} = require('./config/default');
 const {getDevServerConfig} = require('./config/devServer');
+const {getCompiler} = require('./config/devCompiler');
 
 function getProdConfig({config, webpackConfig}) {
 	return getConfig({env: 'production', config, webpackConfig});
@@ -66,19 +64,13 @@ function runDevServer({config = {}, webpackConfig = {}} = {}) {
 	// eslint-disable-next-line
 	const WebpackDevServer = require('webpack-dev-server');
 
-	const finalConfig = getConfig(config, 'development');
-	const originalDestPath = finalConfig.destPath;
-	finalConfig.isDevServer = true;
-	finalConfig.destPath = '.';
-	finalConfig.publicUrl = '/';
+	const {
+		compiler,
+		config: finalConfig,
+		webpackConfig: finalWebpackConfig,
+	} = getCompiler({config, webpackConfig});
 
 	const devServerConfig = getDevServerConfig(finalConfig);
-	const finalWebpackConfig = getWebpackConfig({
-		env: 'development',
-		devServer: true,
-		config: finalConfig,
-		webpackConfig,
-	});
 
 	// add hot-reload related code to entry chunks
 	WebpackDevServer.addDevServerEntrypoints(finalWebpackConfig, {
@@ -86,69 +78,6 @@ function runDevServer({config = {}, webpackConfig = {}} = {}) {
 		hot: true,
 		host: 'localhost',
 	});
-
-	const compileSSR = finalConfig.hasSSR && finalConfig.devServer.buildSSR;
-	const devServerSSRPath = path.join(originalDestPath, 'dev_server');
-	if (compileSSR) {
-		// make directory to keep compiled ssr bundle and client manifest
-		makeDir(devServerSSRPath)
-			.then(() => {})
-			.catch(err => console.error(err));
-	}
-
-	let isFirstCompile = true;
-	const compiler = webpack(finalWebpackConfig);
-	compiler.hooks.emit.tapAsync('sm-webpack-dev-server', (compilation, callback) => {
-		const assets = compilation.assets;
-		if (compileSSR) {
-			// write vue-ssr-client-manifest.json
-			const fileName = 'vue-ssr-client-manifest.json';
-			if (assets[fileName]) {
-				fs.writeFileSync(
-					path.join(devServerSSRPath, fileName),
-					assets[fileName].source(),
-				);
-			}
-		}
-		callback();
-	});
-	compiler.hooks.done.tap('sm-webpack-dev-server', (stats) => {
-		if (stats.hasErrors()) return;
-
-		if (isFirstCompile) {
-			isFirstCompile = false;
-			if (finalConfig.openBrowser) {
-				const port = devServerConfig.port;
-				const protocol = devServerConfig.https ? 'https' : 'http';
-				openBrowser(`${protocol}://localhost:${port}`);
-			}
-		}
-	});
-
-	if (compileSSR) {
-		const finalSSRConfig = getConfig(config, 'development');
-		finalSSRConfig.destPath = devServerSSRPath;
-		finalSSRConfig.publicUrl = '/';
-		finalSSRConfig.isSSR = true;
-
-		const finalSSRWebpackConfig = getWebpackConfig({
-			env: 'development',
-			config: finalSSRConfig,
-			webpackConfig,
-		});
-
-		const ssrCompiler = webpack(finalSSRWebpackConfig);
-		ssrCompiler.watch({}, (err, stats) => {
-			if (err) {
-				console.error(err);
-				return;
-			}
-
-			if (stats.hasErrors()) {
-				// ignore
-			}
-		});
-	}
 
 	// Start a webpack-dev-server
 	const server = new WebpackDevServer(compiler, devServerConfig);
@@ -163,6 +92,11 @@ function runDevServer({config = {}, webpackConfig = {}} = {}) {
 			resolve();
 		});
 	});
+}
+
+function koaDevServer(options) {
+	const _koaDevServer = require('./koaDevServer');
+	return _koaDevServer(options);
 }
 
 function runRollup(options = {}) {
@@ -210,5 +144,6 @@ module.exports = {
 	runDevWebpack,
 	runProdWebpack,
 	runDevServer,
+	koaDevServer,
 	runRollup,
 };

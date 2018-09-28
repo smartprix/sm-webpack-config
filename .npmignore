@@ -54,6 +54,9 @@ env.*
 package-lock.json
 yarn.lock
 
+# Examples
+examples
+
 # Extra files
 .editorconfig
 .gitignore

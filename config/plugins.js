@@ -81,11 +81,16 @@ function getBundleAnalyzerPlugin(config) {
 	return new BundleAnalyzerPlugin(options);
 }
 
-function getDevelopmentPlugins() {
-	return [
-		// Hot Module Replacement
-		new webpack.HotModuleReplacementPlugin(),
-	];
+function getDevelopmentPlugins(config) {
+	const plugins = [];
+	if (!config.hasHotClient && !config.isSSR) {
+		plugins.push(
+			// Hot Module Replacement
+			new webpack.HotModuleReplacementPlugin(),
+		);
+	}
+
+	return plugins;
 }
 
 function getNamedChunksPlugin() {
@@ -157,6 +162,8 @@ function getDevServerMessages(config) {
 }
 
 function getFriendlyErrorsPlugin(config) {
+	if (config.isSSRDevServer) return null;
+
 	let onErrors;
 	if (config.isDevServer && config.devServer.notifyOnError) {
 		onErrors = (severity, errors) => {

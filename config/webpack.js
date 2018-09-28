@@ -46,7 +46,10 @@ function getWebpackConfig(options = {}) {
 
 	const entry = {};
 	_.forEach(config.entry, (value, key) => {
-		entry[key] = path.join(config.sourcePath, value);
+		if (!Array.isArray(value)) {
+			value = [value];
+		}
+		entry[key] = value.map(val => path.join(config.sourcePath, val));
 	});
 
 	const baseConfig = {

@@ -1,0 +1,25 @@
+{
+  "name": "sm-webpack-ssr-example",
+  "version": "1.0.0",
+  "description": "Vue SSR example with sm-webpack-config",
+  "main": "build.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js build",
+    "start": "node res/server/index.js"
+  },
+  "author": "Hitesh Khandelwal",
+  "license": "ISC",
+  "devDependencies": {
+    "sm-webpack-config": "^1.0.3"
+  },
+  "dependencies": {
+    "koa": "^2.5.3",
+    "lru-cache": "^4.1.3",
+    "vue": "^2.5.17",
+    "vue-router": "^3.0.1",
+    "vue-server-renderer": "^2.5.17",
+    "vue-template-compiler": "^2.5.17",
+    "vuex": "^3.0.1"
+  }
+}
