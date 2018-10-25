@@ -11,6 +11,9 @@
     "test": "npm run lint && npm run test-only",
     "lint": "eslint src"
   },
+  "bin": {
+    "sm-webpack": "bin/sm-webpack.js"
+  },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
@@ -39,6 +42,7 @@
     "chalk": "^2.4.1",
     "clean-webpack-plugin": "^0.1.19",
     "cliui": "^4.1.0",
+    "commander": "^2.19.0",
     "compression-webpack-plugin": "^2.0.0",
     "copy-webpack-plugin": "^4.5.2",
     "css-loader": "^1.0.0",
