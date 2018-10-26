@@ -10,7 +10,7 @@ program
 	.version(version)
 	.option('-s, --src [dir]', 'Specify Source Directory (default: res)')
 	.option('-d, --dest [dir]', 'Specify Destination Directory (default: static/dist)')
-	.option('-n, --name [name]', 'Which key to read from sm-webpack.js if object with multiple confs is being exported', '')
+	.option('-c, --config [config]', 'Which key to read from sm-webpack.js if object with multiple confs is being exported', '')
 	.option('--public-url [path]', 'Specify public url path where this will be served from (default: `/{dest}`)')
 	.option('--dev-port [port]', 'Start dev server on port (default: 3001)')
 	.option('--app-port [port]', 'Port for api request (default: 3000)')
@@ -33,7 +33,7 @@ const options = {
 async function runAndExit() {
 	let conf = {};
 	const extraConf = {};
-	const name = (String(program.name) || '').trim();
+	const config = (String(program.config) || '').trim();
 
 	try {
 		conf = require(confFile); // eslint-disable-line
@@ -44,10 +44,10 @@ async function runAndExit() {
 	}
 
 	if (!_.isEmpty(conf)) {
-		if (name && conf[name]) {
-			_.merge(extraConf, conf[name]);
+		if (config && conf[config]) {
+			_.merge(extraConf, conf[config]);
 		}
-		else if (!name) {
+		else if (!config) {
 			_.merge(extraConf, conf);
 		}
 	}
@@ -64,9 +64,9 @@ async function runAndExit() {
 	}
 	try {
 		if (program.prod) {
-			console.time('Built', name || '');
+			console.time('Built', config || '');
 			await smWebpack.runProdWebpack({config: extraConf});
-			console.timeEnd('Built', name || '');
+			console.timeEnd('Built', config || '');
 			process.exit(0);
 		}
 		else {
@@ -74,7 +74,7 @@ async function runAndExit() {
 				throw new Error('Invalid port');
 			}
 			await smWebpack.runDevServer({config: extraConf});
-			console.log(`[smWebpack] Running Dev Server${name ? ' ' + name : ''}!`);
+			console.log(`[smWebpack] Running Dev Server${config ? ' ' + config : ''}!`);
 		}
 	}
 	catch (err) {
