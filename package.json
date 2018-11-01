@@ -1,6 +1,6 @@
 {
   "name": "sm-webpack-config",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Webpack Configuration With Vue, Babel & Hot Reloading",
   "main": "index.js",
   "repository": "smartprix/sm-webpack-config",
