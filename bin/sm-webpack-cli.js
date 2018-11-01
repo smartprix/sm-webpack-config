@@ -7,14 +7,22 @@ const smWebpack = require('../index');
 const confFile = `${process.cwd()}/sm-webpack`;
 
 program
-	.version(version)
+	.version(version, '-v, --version')
+	.usage('[serve | build] [options]')
+	.description(`
+Use it to either serve the files on a dev server:
+	$ sm-webpack serve -s res
+Or build for production:
+	$ sm-webpack build -s res -d static/dist
+Default option is 'build':
+	$ sm-webpack -s res -d static/dist
+	`)
 	.option('-s, --src [dir]', 'Specify Source Directory (default: res)')
 	.option('-d, --dest [dir]', 'Specify Destination Directory (default: static/dist)')
 	.option('-c, --config [config]', 'Which key to read from sm-webpack.js if object with multiple confs is being exported', '')
 	.option('--public-url [path]', 'Specify public url path where this will be served from (default: `/{dest}`)')
 	.option('--dev-port [port]', 'Start dev server on port (default: 3001)')
 	.option('--app-port [port]', 'Port for api request (default: 3000)')
-	.option('--prod', 'Bundle for production')
 	.parse(process.argv);
 
 const devPort = Number(program.devPort);
@@ -34,6 +42,13 @@ async function runAndExit() {
 	let conf = {};
 	const extraConf = {};
 	const config = (String(program.config) || '').trim();
+	let build = true;
+
+	if (program.args && program.args.length > 0) {
+		if (program.args[0] === 'serve') {
+			build = false;
+		}
+	}
 
 	try {
 		conf = require(confFile); // eslint-disable-line
@@ -63,7 +78,7 @@ async function runAndExit() {
 		extraConf.publicUrl = `/${extraConf.destPath}`;
 	}
 	try {
-		if (program.prod) {
+		if (build) {
 			console.time('Built', config || '');
 			await smWebpack.runProdWebpack({config: extraConf});
 			console.timeEnd('Built', config || '');
