@@ -62,55 +62,82 @@ smWebpack.runProdWebpack({config, webpackConfig});
 ## CLI Usage
 
 ```bash
-	# Run devserver with default directory structure and ports assumed
-	sm-webpack
+# Run devserver with default directory structure and ports assumed
+sm-webpack serve
 
-	# Build for production with default 
-	sm-webpack --prod
+# Build for production with default 
+sm-webpack build
+# OR
+sm-webpack
 
-	# Specifiy source and destination
-	sm-webpack --src res/project1 --dest static/dist/project1 --prod
+# Specifiy source and destination
+sm-webpack build --src res/project1 --dest static/dist/project1
 
-	# Specify different ports
-	sm-webpack --dev-port 3050
+# Specify different ports
+sm-webpack serve --dev-port 3050
 ```
 
-#### Using with config
+### Using with config
 
 Add a `sm-webpack.js` file to your project's root directory with the config for your project exported.
+
+Eg. sm-webpack.js:
+```js
+module.exports = {
+	sourcePath: 'res/project1',
+	destPath: 'static/dist/project1',
+	publicUrl: '/static/dist/project1',
+	devServer: {
+		port: 3001,
+		appPort: 3000,
+	},
+};
+```
+
+
+```bash
+# Start project's dev server
+sm-webpack serve
+
+# Build project for production
+sm-webpack
+```
+
+
+#### Multiple projects
 
 If you have multiple projects you can export an object with multiple confs and use the `--config [keyName]` option to select project.
 
 Eg. sm-webpack.js:
 ```js
-	module.exports = {
-		project1: {
-			sourcePath: 'res/project1',
-			destPath: 'static/dist/project1',
-			publicUrl: '/static/dist/project1',
-			devServer: {
-				port: 3001,
-				appPort: 3000,
-			},
+module.exports = {
+	project1: {
+		sourcePath: 'res/project1',
+		destPath: 'static/dist/project1',
+		publicUrl: '/static/dist/project1',
+		devServer: {
+			port: 3001,
+			appPort: 3000,
 		},
-		project2: {
-			sourcePath: 'res/project2',
-			destPath: 'static/dist/project2',
-			publicUrl: '/static/dist/project2',
-			devServer: {
-				port: 3002,
-				appPort: 3000,
-			},
+	},
+	project2: {
+		sourcePath: 'res/project2',
+		destPath: 'static/dist/project2',
+		publicUrl: '/static/dist/project2',
+		devServer: {
+			port: 3002,
+			appPort: 3000,
 		},
-	}
+	},
+}
 ```
 
 ```bash
-	# Start project1's dev server
-	sm-webpack --config project1
+# Start project1's dev server
+sm-webpack serve --config project1
 
-	# Build project2 for production
-	sm-webpack --config project2 --prod
+# Build project2 for production
+sm-webpack --config project2
 ```
 
 
