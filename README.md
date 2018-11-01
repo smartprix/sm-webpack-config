@@ -8,7 +8,9 @@ Webpack configuration with following features:
 * Sane Project Structure
 
 
-## How To Use
+# How To Use
+
+## Install
 
 Install this package
 ```bash
@@ -17,7 +19,7 @@ npm install sm-webpack-config --save-dev
 
 **NOTE**: You need to install `node-sass` if you want to use sass, and `compression-webpack-plugin` if you want to use gzip option.
 
-## How to Use
+## Programmatic Usage
 ```js
 const smWebpack = require('sm-webpack-config');
 
@@ -56,6 +58,88 @@ smWebpack.runProdWebpack({config, webpackConfig});
 
 // NOTE: Both config & webpackConfig are optional
 ```
+
+## CLI Usage
+
+```bash
+# Run devserver with default directory structure and ports assumed
+sm-webpack serve
+
+# Build for production with default 
+sm-webpack build
+# OR
+sm-webpack
+
+# Specifiy source and destination
+sm-webpack build --src res/project1 --dest static/dist/project1
+
+# Specify different ports
+sm-webpack serve --dev-port 3050
+```
+
+### Using with config
+
+Add a `sm-webpack.js` file to your project's root directory with the config for your project exported.
+
+Eg. sm-webpack.js:
+```js
+module.exports = {
+	sourcePath: 'res/project1',
+	destPath: 'static/dist/project1',
+	publicUrl: '/static/dist/project1',
+	devServer: {
+		port: 3001,
+		appPort: 3000,
+	},
+};
+```
+
+
+```bash
+# Start project's dev server
+sm-webpack serve
+
+# Build project for production
+sm-webpack
+```
+
+
+#### Multiple projects
+
+If you have multiple projects you can export an object with multiple confs and use the `--config [keyName]` option to select project.
+
+Eg. sm-webpack.js:
+```js
+module.exports = {
+	project1: {
+		sourcePath: 'res/project1',
+		destPath: 'static/dist/project1',
+		publicUrl: '/static/dist/project1',
+		devServer: {
+			port: 3001,
+			appPort: 3000,
+		},
+	},
+	project2: {
+		sourcePath: 'res/project2',
+		destPath: 'static/dist/project2',
+		publicUrl: '/static/dist/project2',
+		devServer: {
+			port: 3002,
+			appPort: 3000,
+		},
+	},
+}
+```
+
+```bash
+# Start project1's dev server
+sm-webpack serve --config project1
+
+# Build project2 for production
+sm-webpack --config project2
+```
+
 
 ## Using with Gulp
 You can also use it in gulp using the following gulpfile
