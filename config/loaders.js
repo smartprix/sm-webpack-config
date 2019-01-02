@@ -166,7 +166,7 @@ function getFileLoader(config, options = {}) {
 
 function getImageLoader(config) {
 	return getUrlFileLoader(config, {
-		test: /\.(png|jpe?g|webp|gif|ico|svg)(\?.*)?$/,
+		test: /\.(png|jpe?g|webp|gif|ico)(\?.*)?$/,
 		outputPath: 'img/',
 	});
 }
