@@ -5,6 +5,7 @@ const {version} = require('../package.json');
 const smWebpack = require('../index');
 
 const confFile = `${process.cwd()}/sm-webpack`;
+const packageFile = `${process.cwd()}/package.json`;
 
 program
 	.version(version, '-v, --version')
@@ -53,9 +54,15 @@ async function runAndExit() {
 	try {
 		conf = require(confFile); // eslint-disable-line
 	}
-	catch (err) {
-		console.log('[smWebpack] Conf not found or error in config', err);
-		conf = {};
+	catch (e) {
+		try {
+			conf = require(packageFile)['sm-webpack']; // eslint-disable-line
+			if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
+		}
+		catch (err) {
+			console.log('[smWebpack] Conf not found or error in config', e, err);
+			conf = {};
+		}
 	}
 
 	if (!_.isEmpty(conf)) {
