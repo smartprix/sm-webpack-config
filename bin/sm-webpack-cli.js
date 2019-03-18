@@ -7,6 +7,7 @@ const smWebpack = require('../index');
 const confFile = `${process.cwd()}/sm-webpack`;
 // One config for all Smartprix packages
 const smartprixConfFile = `${process.cwd()}/sm-config`;
+const packageFile = `${process.cwd()}/package.json`;
 
 program
 	.version(version, '-v, --version')
@@ -40,8 +41,32 @@ const options = {
 	},
 };
 
-async function runAndExit() {
+function getConfig() {
 	let conf = {};
+	try {
+		conf = require(confFile); // eslint-disable-line
+	}
+	catch (e) {
+		try {
+			conf = require(smartprixConfFile)['sm-webpack']; // eslint-disable-line
+			if (!conf || _.isEmpty(conf)) throw new Error('No config in common \'sm-config\' file');
+		}
+		catch (e2) {
+			try {
+				conf = require(packageFile)['sm-webpack']; // eslint-disable-line
+				if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
+			}
+			catch (e3) {
+				console.log('[smWebpack] Conf not found or error in config', e.message, e2.message, e3.message);
+				conf = {};
+			}
+		}
+	}
+	return conf;
+}
+
+async function runAndExit() {
+	const conf = getConfig();
 	const extraConf = {};
 	const config = (String(program.config) || '').trim();
 	let build = true;
@@ -49,20 +74,6 @@ async function runAndExit() {
 	if (program.args && program.args.length > 0) {
 		if (program.args[0] === 'serve') {
 			build = false;
-		}
-	}
-
-	try {
-		conf = require(confFile); // eslint-disable-line
-	}
-	catch (e) {
-		try {
-			conf = require(smartprixConfFile)['sm-webpack']; // eslint-disable-line
-			if (!conf || _.isEmpty(conf)) throw new Error('No config in common sm-config file');
-		}
-		catch (err) {
-			console.log('[smWebpack] Conf not found or error in config', e.message, err.message);
-			conf = {};
 		}
 	}
 
