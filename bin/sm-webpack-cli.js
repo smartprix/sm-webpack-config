@@ -77,10 +77,11 @@ async function runAndExit() {
 	if (!extraConf.publicUrl) {
 		extraConf.publicUrl = `/${extraConf.destPath}`;
 	}
+	const webpackConfig = extraConf.webpackConfig || {};
 	try {
 		if (build) {
 			console.time('Built', config || '');
-			await smWebpack.runProdWebpack({config: extraConf});
+			await smWebpack.runProdWebpack({config: extraConf, webpackConfig});
 			console.timeEnd('Built', config || '');
 			process.exit(0);
 		}
@@ -88,7 +89,7 @@ async function runAndExit() {
 			if (!Number.isSafeInteger(extraConf.devServer.port)) {
 				throw new Error('Invalid port');
 			}
-			await smWebpack.runDevServer({config: extraConf});
+			await smWebpack.runDevServer({config: extraConf, webpackConfig});
 			console.log(`[smWebpack] Running Dev Server${config ? ' ' + config : ''}!`);
 		}
 	}
