@@ -1,7 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const makeDir = require('make-dir');
-const openBrowser = require('opn');
+const openBrowser = require('open');
 
 const {getWebpackConfig} = require('./webpack');
 const {getConfig} = require('./default');
@@ -109,7 +109,7 @@ function getCompiler(options = {}) {
 	const finalConfig = getConfig(config, 'development');
 	const originalDestPath = finalConfig.destPath;
 	finalConfig.isDevServer = true;
-	finalConfig.hasHotClient = true;
+	finalConfig.hasHotClient = false;
 	finalConfig.destPath = '.';
 	finalConfig.publicUrl = '/';
 
