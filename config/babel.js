@@ -4,6 +4,7 @@ const defaultEnvOptions = {
 	loose: true,
 	modules: false,
 	useBuiltIns: 'usage',
+	corejs: 2,
 	targets: {
 		chrome: '55',
 	},
