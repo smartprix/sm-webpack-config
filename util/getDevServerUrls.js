@@ -13,7 +13,7 @@ function getDevServerUrls(config) {
 	const port = devServer.port;
 	const protocol = devServer.https ? 'https' : 'http';
 
-	const localIp = 'localhost';
+	const localIp = devServer.wwwHost || 'localhost';
 	const localUrl = chalk.cyan(`${protocol}://${localIp}:${chalk.bold(port)}`);
 
 	let networkUrl;

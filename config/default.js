@@ -33,10 +33,12 @@ const configWebpack = {
 
 const devServer = {
 	host: '0.0.0.0',
+	wwwHost: 'localhost',
 	port: 3001,
 	https: false,
 	open: true,
 	appPort: 3000,
+	appHost: 'localhost',
 	proxy: {
 		'/api': 'http://localhost:<appPort>',
 		'/static': 'http://localhost:<appPort>',

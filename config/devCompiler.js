@@ -155,9 +155,10 @@ function getCompiler(options = {}) {
 		if (isFirstCompile) {
 			isFirstCompile = false;
 			if (finalConfig.openBrowser) {
+				const host = devServerOpts.wwwHost || 'localhost';
 				const port = devServerOpts.port || 3001;
 				const protocol = devServerOpts.https ? 'https' : 'http';
-				openBrowser(`${protocol}://localhost:${port}`);
+				openBrowser(`${protocol}://${host}:${port}`);
 			}
 		}
 	});

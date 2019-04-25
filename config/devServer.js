@@ -13,7 +13,7 @@ function getDevServerConfig(config) {
 		historyApiFallback: false,
 		proxy: {
 			context: () => true,
-			target: `http://localhost:${devServerOpts.appPort}`,
+			target: `http://${devServerOpts.appHost}:${devServerOpts.appPort}`,
 			ws: true,
 			changeOrigin: true,
 		},
@@ -21,6 +21,8 @@ function getDevServerConfig(config) {
 
 	delete devServerOpts.before;
 	delete devServerOpts.after;
+	delete devServerOpts.wwwHost;
+	delete devServerOpts.appHost;
 	delete devServerOpts.appPort;
 	delete devServerOpts.notifyOnError;
 	delete devServerOpts.open;
