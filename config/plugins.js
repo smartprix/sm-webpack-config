@@ -125,19 +125,17 @@ function getProductionPlugins(config) {
 	if (!config.isSSR) {
 		plugins.push(
 			// clean the dist folder
-			new CleanWebpackPlugin(config.destPath, {
-				root: process.cwd(),
+			new CleanWebpackPlugin({
 				// perform clean just before files are emitted to the output dir
-				beforeEmit: true,
-				verbose: false,
-				// don't remove the ssr server bundle
-				exclude: [
-					'vue-ssr-server-bundle.json',
-					'server-bundle.json',
-					'server-bundle.js',
-					'vue-ssr-client-manifest.json',
-					'client-manifest.json',
+				cleanAfterEveryBuildPatterns: [
+					// don't remove the ssr server bundle
+					'!vue-ssr-server-bundle.json',
+					'!server-bundle.json',
+					'!server-bundle.js',
+					'!vue-ssr-client-manifest.json',
+					'!client-manifest.json',
 				],
+				verbose: false,
 			}),
 
 			// remove all momentjs locale except for the en-gb locale
