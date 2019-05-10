@@ -35,8 +35,8 @@ function getCacheConfig(config, id, options = {}) {
 
 function getJsLoader(config) {
 	const babelConfig = getBabelConfig(config);
-	const debug = babelConfig.debug;
-	delete babelConfig.debug;
+	const {debug} = babelConfig.options;
+	delete babelConfig.options;
 	const cacheConfig = getCacheConfig(config, 'babel-loader', {
 		modules: [
 			'@babel/core',
