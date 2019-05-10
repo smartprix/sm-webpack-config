@@ -23,10 +23,12 @@ function getFileName(config) {
 	return 'js/[name].js';
 }
 
-// options is {env, config, webpackConfig}
-// env can be developement or production
-// config gets merged into our default config
-// webpackConfig gets merged into final webpack config
+/**
+ * @param options it is {env, config, webpackConfig}
+ * env can be developement or production
+ * config gets merged into our default config
+ * webpackConfig gets merged into final webpack config
+ */
 function getWebpackConfig(options = {}) {
 	const env = options.env || process.env.NODE_ENV || 'development';
 

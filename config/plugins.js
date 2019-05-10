@@ -14,6 +14,11 @@ const {VueLoaderPlugin} = require('vue-loader');
 
 const getDevServerUrls = require('../util/getDevServerUrls');
 
+/**
+ * Generate dist index.html with correct asset hash for caching.
+ * you can customize output by editing /index.html
+ * @see https://github.com/ampedandwired/html-webpack-plugin
+ */
 function getHtmlWebpackPlugin(config = {}) {
 	// eslint-disable-next-line
 	const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -33,9 +38,6 @@ function getHtmlWebpackPlugin(config = {}) {
 		};
 	}
 
-	// generate dist index.html with correct asset hash for caching.
-	// you can customize output by editing /index.html
-	// see https://github.com/ampedandwired/html-webpack-plugin
 	return new HtmlWebpackPlugin({
 		filename: `${config.entryHtml}`,
 		template: path.join(config.sourcePath, config.entryHtml),
@@ -61,11 +63,13 @@ function getCompressionPlugin() {
 	});
 }
 
+/**
+ * generate bundle size stats so we can analyze them
+ * to see which dependecies are the heaviest
+ */
 function getBundleAnalyzerPlugin(config) {
 	const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
-	// generate bundle size stats so we can analyze them
-	// to see which dependecies are the heaviest
 	const options = {
 		analyzerMode: 'static',
 		reportFilename: 'webpack.report.html',
