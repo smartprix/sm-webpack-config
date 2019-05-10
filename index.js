@@ -31,9 +31,7 @@ function runWebpack({env, config, webpackConfig}) {
 			if (!config.isSSR) {
 				console.log(formatStats(stats, config.destPath));
 			}
-
-			// give time to webpack bundle analyzer to output stats
-			setImmediate(resolve);
+			resolve();
 		});
 	});
 }
