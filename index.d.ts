@@ -21,6 +21,7 @@ declare module 'sm-webpack-config' {
 			},
 			shippedProposals?: boolean;
 			exclude?: string | string[] | RegExp;
+			debug?: boolean;
 		}
 		/**
 		 * @see https://www.npmjs.com/package/babel-plugin-transform-imports#options
@@ -54,6 +55,11 @@ declare module 'sm-webpack-config' {
 		 * - @babel/plugin-transform-runtime
 		 */
 		excludePlugins?: string[];
+		/**
+		 * Mention node_modules that need to be compiled by babel
+		 * Or a regex pattern that matches modules
+		 */
+		includeModules?: string[] | RegExp;
 		debug?: boolean;
 	}
 
