@@ -4,16 +4,16 @@ const webpack = require('webpack');
 const chalk = require('chalk');
 
 const {getWebpackConfig} = require('./config/webpack');
-const {getConfig, getRollupConfig} = require('./config/default');
+const {getRollupConfig} = require('./config/default');
 const {getDevServerConfig} = require('./config/devServer');
 const {getCompiler} = require('./config/devCompiler');
 
 function getProdConfig({config, webpackConfig}) {
-	return getConfig({env: 'production', config, webpackConfig});
+	return getWebpackConfig({env: 'production', config, webpackConfig});
 }
 
 function getDevConfig({config, webpackConfig}) {
-	return getConfig({env: 'development', config, webpackConfig});
+	return getWebpackConfig({env: 'development', config, webpackConfig});
 }
 
 function runWebpack({env, config, webpackConfig}) {
