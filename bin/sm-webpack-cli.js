@@ -84,6 +84,7 @@ async function runAndExit() {
 		else if (!config) {
 			_.merge(extraConf, conf);
 		}
+		else throw new Error(`Invalid config option: ${config}`);
 	}
 	_.defaultsDeep(extraConf, options, {
 		sourcePath: 'res',
@@ -118,4 +119,6 @@ async function runAndExit() {
 	}
 }
 
-runAndExit();
+runAndExit().catch((err) => {
+	console.error(err);
+});
