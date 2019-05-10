@@ -74,6 +74,7 @@ function getBabelConfig(config = {}) {
 	plugins.push(...includePlugins);
 
 	return {
+		debug: envOptions.debug,
 		babelrc: false,
 		presets,
 		plugins,

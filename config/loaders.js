@@ -35,6 +35,8 @@ function getCacheConfig(config, id, options = {}) {
 
 function getJsLoader(config) {
 	const babelConfig = getBabelConfig(config);
+	const debug = babelConfig.debug;
+	delete babelConfig.debug;
 	const cacheConfig = getCacheConfig(config, 'babel-loader', {
 		modules: [
 			'@babel/core',
@@ -65,7 +67,7 @@ function getJsLoader(config) {
 			if (filePath.includes('node_modules')) return true;
 			return false;
 		},
-		use: [
+		use: debug ? babelLoader : [
 			cacheLoader,
 			babelLoader,
 		],
