@@ -1,5 +1,7 @@
 /* eslint-disable */
-https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/commands/build/formatStats.js
+/**
+ * @see https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/commands/build/formatStats.js
+ */
 module.exports = function formatStats (stats, dir) {
 	const fs = require('fs')
 	const path = require('path')
