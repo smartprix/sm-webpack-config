@@ -25,6 +25,7 @@ function getBabelConfig(config = {}) {
 	const excludePresets = options.excludePresets || [];
 	const includePlugins = options.includePlugins || [];
 	const excludePlugins = options.excludePlugins || [];
+	const includeModules = options.includeModules || [];
 
 	const presets = [];
 	const addPreset = (preset, opts) => {
@@ -74,6 +75,10 @@ function getBabelConfig(config = {}) {
 	plugins.push(...includePlugins);
 
 	return {
+		options: {
+			debug: envOptions.debug,
+			includeModules,
+		},
 		babelrc: false,
 		presets,
 		plugins,

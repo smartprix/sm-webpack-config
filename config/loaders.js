@@ -1,4 +1,5 @@
 const path = require('path');
+const _ = require('lodash');
 const hash = require('hash-sum');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const {getBabelConfig} = require('./babel');
@@ -35,6 +36,8 @@ function getCacheConfig(config, id, options = {}) {
 
 function getJsLoader(config) {
 	const babelConfig = getBabelConfig(config);
+	const {debug, includeModules} = babelConfig.options;
+	delete babelConfig.options;
 	const cacheConfig = getCacheConfig(config, 'babel-loader', {
 		modules: [
 			'@babel/core',
@@ -54,6 +57,14 @@ function getJsLoader(config) {
 		options: babelConfig,
 	};
 
+	let modulesRegex;
+	if (_.isRegExp(includeModules)) {
+		modulesRegex = includeModules;
+	}
+	else if (includeModules.length) {
+		modulesRegex = new RegExp(`(${_.map(includeModules, _.escapeRegExp).join('|')})`);
+	}
+
 	// TODO: maybe use thread-loader here
 
 	return {
@@ -62,10 +73,13 @@ function getJsLoader(config) {
 			if (filePath.includes('.vue')) return false;
 			if (filePath.includes('.jsx')) return false;
 			if (filePath.includes('.mjs')) return false;
+			if (modulesRegex && modulesRegex.test(filePath)) {
+				return false;
+			}
 			if (filePath.includes('node_modules')) return true;
 			return false;
 		},
-		use: [
+		use: debug ? babelLoader : [
 			cacheLoader,
 			babelLoader,
 		],
@@ -209,7 +223,7 @@ function getStyleLoader(loaders, options = {}, config) {
 	// enable module support
 	if (options.modules) {
 		cssLoader[1].modules = true;
-		let localIdentName = '[hash:base64:6]';
+		let localIdentName = '[hash:base62:6]';
 		if (!config.isProduction) {
 			localIdentName = `[name]_[local]_${localIdentName}`;
 		}

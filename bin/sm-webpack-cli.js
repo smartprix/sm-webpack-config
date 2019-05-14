@@ -5,6 +5,9 @@ const {version} = require('../package.json');
 const smWebpack = require('../index');
 
 const confFile = `${process.cwd()}/sm-webpack`;
+// One config for all Smartprix packages
+const smartprixConfFile = `${process.cwd()}/sm-config`;
+const packageFile = `${process.cwd()}/package.json`;
 
 program
 	.version(version, '-v, --version')
@@ -38,8 +41,32 @@ const options = {
 	},
 };
 
-async function runAndExit() {
+function getConfig() {
 	let conf = {};
+	try {
+		conf = require(confFile); // eslint-disable-line
+	}
+	catch (e) {
+		try {
+			conf = require(smartprixConfFile)['sm-webpack']; // eslint-disable-line
+			if (!conf || _.isEmpty(conf)) throw new Error('No config in common \'sm-config\' file');
+		}
+		catch (e2) {
+			try {
+				conf = require(packageFile)['sm-webpack']; // eslint-disable-line
+				if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
+			}
+			catch (e3) {
+				console.log('[smWebpack] Conf not found or error in config', e.message, e2.message, e3.message);
+				conf = {};
+			}
+		}
+	}
+	return conf;
+}
+
+async function runAndExit() {
+	const conf = getConfig();
 	const extraConf = {};
 	const config = (String(program.config) || '').trim();
 	let build = true;
@@ -50,14 +77,6 @@ async function runAndExit() {
 		}
 	}
 
-	try {
-		conf = require(confFile); // eslint-disable-line
-	}
-	catch (err) {
-		console.log('[smWebpack] Conf not found or error in config', err);
-		conf = {};
-	}
-
 	if (!_.isEmpty(conf)) {
 		if (config && conf[config]) {
 			_.merge(extraConf, conf[config]);
@@ -65,6 +84,7 @@ async function runAndExit() {
 		else if (!config) {
 			_.merge(extraConf, conf);
 		}
+		else throw new Error(`Invalid config option: ${config}`);
 	}
 	_.defaultsDeep(extraConf, options, {
 		sourcePath: 'res',
@@ -77,10 +97,11 @@ async function runAndExit() {
 	if (!extraConf.publicUrl) {
 		extraConf.publicUrl = `/${extraConf.destPath}`;
 	}
+	const webpackConfig = extraConf.webpackConfig || {};
 	try {
 		if (build) {
 			console.time('Built', config || '');
-			await smWebpack.runProdWebpack({config: extraConf});
+			await smWebpack.runProdWebpack({config: extraConf, webpackConfig});
 			console.timeEnd('Built', config || '');
 			process.exit(0);
 		}
@@ -88,7 +109,7 @@ async function runAndExit() {
 			if (!Number.isSafeInteger(extraConf.devServer.port)) {
 				throw new Error('Invalid port');
 			}
-			await smWebpack.runDevServer({config: extraConf});
+			await smWebpack.runDevServer({config: extraConf, webpackConfig});
 			console.log(`[smWebpack] Running Dev Server${config ? ' ' + config : ''}!`);
 		}
 	}
@@ -98,4 +119,6 @@ async function runAndExit() {
 	}
 }
 
-runAndExit();
+runAndExit().catch((err) => {
+	console.error(err);
+});

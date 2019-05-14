@@ -3,6 +3,7 @@ const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
+const hash = require('hash-sum');
 const notifier = require('node-notifier');
 const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
@@ -14,6 +15,11 @@ const {VueLoaderPlugin} = require('vue-loader');
 
 const getDevServerUrls = require('../util/getDevServerUrls');
 
+/**
+ * Generate dist index.html with correct asset hash for caching.
+ * you can customize output by editing /index.html
+ * @see https://github.com/ampedandwired/html-webpack-plugin
+ */
 function getHtmlWebpackPlugin(config = {}) {
 	// eslint-disable-next-line
 	const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -33,9 +39,6 @@ function getHtmlWebpackPlugin(config = {}) {
 		};
 	}
 
-	// generate dist index.html with correct asset hash for caching.
-	// you can customize output by editing /index.html
-	// see https://github.com/ampedandwired/html-webpack-plugin
 	return new HtmlWebpackPlugin({
 		filename: `${config.entryHtml}`,
 		template: path.join(config.sourcePath, config.entryHtml),
@@ -61,11 +64,13 @@ function getCompressionPlugin() {
 	});
 }
 
+/**
+ * generate bundle size stats so we can analyze them
+ * to see which dependecies are the heaviest
+ */
 function getBundleAnalyzerPlugin(config) {
 	const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
-	// generate bundle size stats so we can analyze them
-	// to see which dependecies are the heaviest
 	const options = {
 		analyzerMode: 'static',
 		reportFilename: 'webpack.report.html',
@@ -93,12 +98,20 @@ function getDevelopmentPlugins(config) {
 	return plugins;
 }
 
+/**
+ * Keep chunk ids stable so async chunks have consistent hash (#1916)
+ * @see https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/config/app.js
+ */
 function getNamedChunksPlugin() {
-	// keep chunk ids stable so async chunks have consistent hash (#1916)
-	// Taken from: https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/config/app.js
 	return new webpack.NamedChunksPlugin((chunk) => {
-		if (chunk.name) return chunk.name;
-		return 'chunk-' + Array.from(chunk.modulesIterable, m => m.id).join('_');
+		if (chunk.name) {
+			return chunk.name;
+		}
+
+		const joinedHash = hash(
+			Array.from(chunk.modulesIterable, m => m.id).join('_')
+		);
+		return 'chunk-' + joinedHash;
 	});
 }
 

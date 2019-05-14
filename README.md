@@ -80,6 +80,7 @@ sm-webpack serve --dev-port 3050
 ### Using with config
 
 Add a `sm-webpack.js` file to your project's root directory with the config for your project exported.
+Or add a "sm-webpack" key to your package.json.
 
 Eg. sm-webpack.js:
 ```js
