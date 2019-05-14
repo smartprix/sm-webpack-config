@@ -3,6 +3,7 @@ const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
+const hash = require('hash-sum');
 const notifier = require('node-notifier');
 const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
@@ -97,12 +98,20 @@ function getDevelopmentPlugins(config) {
 	return plugins;
 }
 
+/**
+ * Keep chunk ids stable so async chunks have consistent hash (#1916)
+ * @see https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/config/app.js
+ */
 function getNamedChunksPlugin() {
-	// keep chunk ids stable so async chunks have consistent hash (#1916)
-	// Taken from: https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/config/app.js
 	return new webpack.NamedChunksPlugin((chunk) => {
-		if (chunk.name) return chunk.name;
-		return 'chunk-' + Array.from(chunk.modulesIterable, m => m.id).join('_');
+		if (chunk.name) {
+			return chunk.name;
+		}
+
+		const joinedHash = hash(
+			Array.from(chunk.modulesIterable, m => m.id).join('_')
+		);
+		return 'chunk-' + joinedHash;
 	});
 }
 
