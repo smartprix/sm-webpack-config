@@ -223,7 +223,7 @@ function getStyleLoader(loaders, options = {}, config) {
 	// enable module support
 	if (options.modules) {
 		cssLoader[1].modules = true;
-		let localIdentName = '[hash:base64:6]';
+		let localIdentName = '[hash:base62:6]';
 		if (!config.isProduction) {
 			localIdentName = `[name]_[local]_${localIdentName}`;
 		}
