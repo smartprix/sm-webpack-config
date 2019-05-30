@@ -6,10 +6,10 @@ const chalk = require('chalk');
 const hash = require('hash-sum');
 const notifier = require('node-notifier');
 const webpack = require('webpack');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
 const FriendlyErrors = require('friendly-errors-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const {GhostProgressPlugin} = require('ghost-progress-webpack-plugin');
 const {VueLoaderPlugin} = require('vue-loader');
 
@@ -82,7 +82,6 @@ function getBundleAnalyzerPlugin(config) {
 	if (_.isPlainObject(config.analyzeBundle)) {
 		Object.assign(options, config.analyzeBundle);
 	}
-
 	return new BundleAnalyzerPlugin(options);
 }
 
@@ -148,7 +147,6 @@ function getProductionPlugins(config) {
 					'!vue-ssr-client-manifest.json',
 					'!client-manifest.json',
 				],
-				verbose: false,
 			}),
 
 			// remove all momentjs locale except for the en-gb locale

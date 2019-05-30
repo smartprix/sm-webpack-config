@@ -44,7 +44,7 @@
     "cache-loader": "^3.0.1",
     "caniuse-lite": "^1.0.30000967",
     "chalk": "^2.4.2",
-    "clean-webpack-plugin": "^2.0.2",
+    "clean-webpack-plugin": "^3.0.0",
     "cliui": "^5.0.0",
     "commander": "^2.20.0",
     "compression-webpack-plugin": "^2.0.0",
