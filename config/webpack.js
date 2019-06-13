@@ -43,15 +43,15 @@ function getWebpackConfig(options = {}) {
 
 	const cwd = config.cwd;
 
-	config.sourcePath = path.join(cwd, config.sourcePath);
-	config.destPath = path.join(cwd, config.destPath);
+	config.sourcePath = path.resolve(cwd, config.sourcePath);
+	config.destPath = path.resolve(cwd, config.destPath);
 
 	const entry = {};
 	_.forEach(config.entry, (value, key) => {
 		if (!Array.isArray(value)) {
 			value = [value];
 		}
-		entry[key] = value.map(val => path.join(config.sourcePath, val));
+		entry[key] = value.map(val => path.resolve(config.sourcePath, val));
 	});
 
 	const baseConfig = {
