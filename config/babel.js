@@ -50,8 +50,9 @@ function getBabelConfig(config = {}) {
 	addPlugin('@babel/plugin-proposal-class-properties', {loose: true});
 
 	// vue-jsx
-	addPlugin('@babel/plugin-syntax-jsx');
-	addPlugin('babel-plugin-transform-vue-jsx');
+	addPlugin('@vue/babel-plugin-transform-vue-jsx');
+
+	// FIXME: IF using then migrate to https://github.com/vuejs/jsx
 	// addPlugin('babel-plugin-jsx-v-model');
 	// addPlugin('babel-plugin-jsx-event-modifiers');
 
