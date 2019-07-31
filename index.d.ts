@@ -46,7 +46,8 @@ interface BabelConfig {
 	 * - @babel/plugin-syntax-dynamic-import
 	 * - @babel/plugin-syntax-import-meta
 	 * - @babel/plugin-proposal-class-properties
-	 * - @vue/babel-plugin-transform-vue-jsx
+	 * - @babel/plugin-syntax-jsx
+	 * - babel-plugin-transform-vue-jsx
 	 * - @babel/plugin-proposal-optional-chaining
 	 * - @babel/plugin-proposal-nullish-coalescing-operator
 	 * - babel-plugin-transform-imports
