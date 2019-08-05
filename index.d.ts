@@ -13,9 +13,21 @@ interface BabelConfig {
 		modules?: string | boolean;
 		useBuiltIns?: false | 'entry' | 'usage';
 		corejs?: number;
-		targets: {
+		targets?: {
+			/**
+			 *  NOTE: when specifying the esmodules target, browsers targets will be ignored
+			 */
 			esmodules?: boolean;
 			chrome?: string;
+			opera?: string;
+			edge?: string;
+			firefox?: string;
+			safari?: string;
+			ie?: string;
+			ios?: string;
+			android?: string;
+			node?: string;
+			electron?: string;
 			browsers?: string[];
 		},
 		shippedProposals?: boolean;
@@ -107,7 +119,7 @@ interface BaseConfig {
 	 * to see which dependecies are the heaviest
 	 * @see https://www.npmjs.com/package/webpack-bundle-analyzer
 	 */
-	analyzeBundle?: boolean | BundleAnalyzerPlugin.Options;
+	analyzeBundle?: boolean | Partial<BundleAnalyzerPlugin.Options>;
 	ssr?: boolean | {
 		entry?: string;
 		sourceMap?: boolean;
@@ -133,7 +145,7 @@ export interface Config extends BaseConfig {
 	/**
 	 * NOTE: This is only used when called through CLI, it is ignored when called through function
 	 */
-	webpackConfig: Partial<webpackConfig>;
+	webpackConfig?: Partial<webpackConfig>;
 	$env_development?: Partial<BaseConfig>;
 	$env_production?: Partial<BaseConfig>;
 }
