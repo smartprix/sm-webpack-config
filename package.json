@@ -62,6 +62,7 @@
     "imports-loader": "^0.8.0",
     "json-loader": "^0.5.7",
     "launch-editor-middleware": "^2.2.1",
+    "lodash": "^4.17.14",
     "make-dir": "^3.0.0",
     "memory-fs": "^0.4.1",
     "mini-css-extract-plugin": "^0.6.0",
@@ -101,7 +102,6 @@
   "devDependencies": {
     "eslint": "^5.9.0",
     "eslint-config-smartprix": "^3.5.3",
-    "lodash": "^4.17.14",
     "vue": "^2.5.17",
     "vue-server-renderer": "^2.5.17",
     "vue-template-compiler": "^2.5.17"
@@ -110,7 +110,6 @@
   "peerDependencies": {
     "eslint": "*",
     "eslint-config-smartprix": "*",
-    "lodash": "*",
     "vue": "*",
     "vue-server-renderer": "*",
     "vue-template-compiler": "*"
