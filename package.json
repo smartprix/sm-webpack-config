@@ -52,8 +52,6 @@
     "core-js": "2",
     "css-loader": "^2.1.1",
     "css-mqpacker": "^7.0.0",
-    "eslint": "*",
-    "eslint-config-smartprix": "*",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^2.1.2",
     "file-loader": "^3.0.1",
@@ -64,7 +62,7 @@
     "imports-loader": "^0.8.0",
     "json-loader": "^0.5.7",
     "launch-editor-middleware": "^2.2.1",
-    "lodash": "*",
+    "lodash": "^4.17.14",
     "make-dir": "^3.0.0",
     "memory-fs": "^0.4.1",
     "mini-css-extract-plugin": "^0.6.0",
@@ -91,11 +89,8 @@
     "saladcss-bem": "^0.0.2",
     "terser-webpack-plugin": "^1.2.3",
     "url-loader": "^1.1.2",
-    "vue": "*",
     "vue-loader": "^15.7.0",
-    "vue-server-renderer": "*",
     "vue-style-loader": "^4.1.2",
-    "vue-template-compiler": "*",
     "webpack": "^4.31.0",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-dev-middleware": "^3.6.2",
@@ -104,7 +99,20 @@
     "webpack-merge": "^4.2.1",
     "webpack-node-externals": "^1.7.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^5.9.0",
+    "eslint-config-smartprix": "^3.5.3",
+    "vue": "^2.5.17",
+    "vue-server-renderer": "^2.5.17",
+    "vue-template-compiler": "^2.5.17"
+  },
+  "peerDependencies": {
+    "eslint": "*",
+    "eslint-config-smartprix": "*",
+    "vue": "*",
+    "vue-server-renderer": "*",
+    "vue-template-compiler": "*"
+  },
   "eslintConfig": {
     "extends": "smartprix",
     "rules": {}
