@@ -105,7 +105,6 @@
     "vue": "^2.5.17",
     "vue-server-renderer": "^2.5.17",
     "vue-template-compiler": "^2.5.17"
-
   },
   "peerDependencies": {
     "eslint": "*",
