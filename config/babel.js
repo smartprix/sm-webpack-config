@@ -5,7 +5,7 @@ const defaultEnvOptions = {
 	modules: false,
 	useBuiltIns: 'usage',
 	corejs: 3,
-	debug: true,
+	debug: false,
 	targets: {
 		// modules support
 		// NOTE: safari 10.1 does support modules, but other features support is broken
