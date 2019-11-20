@@ -222,12 +222,15 @@ function getStyleLoader(loaders, options = {}, config) {
 	const cssLoader = ['css', {importLoaders: 2}];
 	// enable module support
 	if (options.modules) {
-		cssLoader[1].modules = true;
 		let localIdentName = '[hash:base62:6]';
 		if (!config.isProduction) {
 			localIdentName = `[name]_[local]_${localIdentName}`;
 		}
-		cssLoader[1].localIdentName = localIdentName;
+
+		cssLoader[1].modules = options.modules === true ? {
+			mode: 'local',
+			localIdentName,
+		} : options.modules;
 	}
 
 	loaders = [cssLoader].concat(loaders);
