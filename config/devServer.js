@@ -2,22 +2,24 @@ const path = require('path');
 const launchEditorMiddleware = require('launch-editor-middleware');
 
 function getDevServerConfig(config) {
-	const isSSR = config.hasSSR && config.devServer.buildSSR;
+	// this is not the best way, disabling this until we find a better way
+	// const isSSR = config.hasSSR && config.devServer.buildSSR;
+	// const ssrOpts = isSSR ? {
+	// 	index: '',
+	// 	historyApiFallback: false,
+	// 	proxy: {
+	// 		context: () => true,
+	// 		target: `http://${devServerOpts.appHost}:${devServerOpts.appPort}`,
+	// 		ws: true,
+	// 		changeOrigin: true,
+	// 	},
+	// } : {};
+
+	const ssrOpts = {};
 	const devServerOpts = Object.assign({}, config.devServer || {});
 
 	const before = devServerOpts.before;
 	const after = devServerOpts.after;
-
-	const ssrOpts = isSSR ? {
-		index: '',
-		historyApiFallback: false,
-		proxy: {
-			context: () => true,
-			target: `http://${devServerOpts.appHost}:${devServerOpts.appPort}`,
-			ws: true,
-			changeOrigin: true,
-		},
-	} : {};
 
 	delete devServerOpts.before;
 	delete devServerOpts.after;
