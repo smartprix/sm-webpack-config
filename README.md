@@ -252,8 +252,8 @@ const config = {
 		// https://babeljs.io/docs/en/babel-preset-env.html
 		envOptions: {
 			// target these browsers
-			// default targets is based on browsers that support async-await
-			targets: {chrome: '55'},
+			// default targets is based on browsers that support modules
+			targets: {chrome: '61', firefox: '60', safari: '11.1'},
 		},
 
 		// extra presets to include
@@ -274,6 +274,14 @@ const config = {
 
 		// run babel in debug mode
 		debug: false,
+	},
+
+	// postcss config
+	postcss: {
+		// baseline for postcss-rem
+		remBaseline: 14,
+		// initial variables for postcss-simple-vars
+		variables: {},
 	},
 
 	// whether to generate analyzer report with the generated bundle

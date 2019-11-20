@@ -80,6 +80,11 @@ function getConfig(config, env) {
 		finalConfig.publicUrl += '/';
 	}
 
+	// set postcss config as env variable
+	if (config.postcss) {
+		process.env._SM_WEBPACK_POSTCSS_CONFIG_ = JSON.stringify(config.postcss);
+	}
+
 	// dev server config needs to be merged separately
 	finalConfig.devServer = Object.assign({}, devServer, config.devServer);
 

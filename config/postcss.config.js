@@ -10,12 +10,19 @@ const atIf = require('postcss-conditionals');
 const atFor = require('postcss-for');
 const atEach = require('postcss-each');
 const bem = require('saladcss-bem');
-const mqPacker = require('css-mqpacker');
+const postcssRem = require('postcss-rem');
+const combineMediaQuery = require('postcss-combine-media-query');
+
+const postcssConfig = JSON.parse(process.env._SM_WEBPACK_POSTCSS_CONFIG_ || '{}');
+const remBaseline = postcssConfig.remBaseline || 14;
+const variables = postcssConfig.variables || {};
 
 module.exports = {
 	plugins: [
 		cssImport(),
-		simpleVars(),
+		simpleVars({
+			variables,
+		}),
 		atVariables({
 			atRules: ['for', 'if', 'else', 'each', 'media', 'custom-media', 'import', 'supports'],
 		}),
@@ -45,7 +52,13 @@ module.exports = {
 		atExtend(),
 		nested(),
 		utilities(),
-		simpleVars(),
-		mqPacker(),
+		simpleVars({
+			variables,
+		}),
+		postcssRem({
+			baseline: remBaseline,
+			precision: 4,
+		}),
+		combineMediaQuery(),
 	],
 };

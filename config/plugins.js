@@ -39,8 +39,9 @@ function getHtmlWebpackPlugin(config = {}) {
 		};
 	}
 
+	const filename = config.isDevServer ? 'index.html' : config.entryHtml;
 	return new HtmlWebpackPlugin({
-		filename: `${config.entryHtml}`,
+		filename,
 		template: path.join(config.sourcePath, config.entryHtml),
 		inject: true,
 		minify,

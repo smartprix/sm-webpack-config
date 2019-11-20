@@ -4,18 +4,43 @@ const defaultEnvOptions = {
 	loose: true,
 	modules: false,
 	useBuiltIns: 'usage',
-	corejs: 2,
+	corejs: 3,
+	debug: true,
 	targets: {
-		chrome: '55',
+		// modules support
+		// NOTE: safari 10.1 does support modules, but other features support is broken
+		chrome: '61',
+		firefox: '60',
+		safari: '11.1',
 	},
+	exclude: [
+		// this is included on safari even though safari supports it
+		'@babel/plugin-transform-template-literals',
+		// this will not be needed in most cases
+		'@babel/plugin-transform-dotall-regex',
+		// this is included in safari for some edge case
+		'@babel/plugin-transform-unicode-regex',
+		// these are unnecessary (not sure why corejs includes these)
+		'es.array.iterator',
+		'es.promise',
+		'web.dom-collections.iterator',
+		'es.string.replace',
+		'es.string.trim',
+		'es.symbol.description',
+	],
 	shippedProposals: true,
 };
 
 function getBabelConfig(config = {}) {
 	const options = config.babel || {};
 
+	const envOverrides = {};
 	let envOptions = options.envOptions || {};
-	envOptions = Object.assign({}, defaultEnvOptions, envOptions);
+	if (envOptions.targets) {
+		// targets is different from ours, remove exclude and let user deal with them
+		envOverrides.exclude = [];
+	}
+	envOptions = Object.assign({}, defaultEnvOptions, envOverrides, envOptions);
 
 	if (options.debug) {
 		envOptions.debug = true;
@@ -45,20 +70,14 @@ function getBabelConfig(config = {}) {
 	};
 
 	// stage 3
-	addPlugin('@babel/plugin-syntax-dynamic-import');
 	addPlugin('@babel/plugin-syntax-import-meta');
 	addPlugin('@babel/plugin-proposal-class-properties', {loose: true});
-
-	// vue-jsx
-	addPlugin('@babel/plugin-syntax-jsx');
-	addPlugin('babel-plugin-transform-vue-jsx');
-	// addPlugin('babel-plugin-jsx-v-model');
-	// addPlugin('babel-plugin-jsx-event-modifiers');
-
-	// esnext
-	// unstable plugins, disabling
 	addPlugin('@babel/plugin-proposal-optional-chaining', {loose: true});
 	addPlugin('@babel/plugin-proposal-nullish-coalescing-operator', {loose: true});
+	addPlugin('@babel/plugin-proposal-numeric-separator');
+
+	// vue-jsx
+	addPreset('@vue/babel-preset-jsx');
 
 	// transform-imports to reduce code size, config needs to be given
 	addPlugin('babel-plugin-transform-imports', options.transformImports || {});
