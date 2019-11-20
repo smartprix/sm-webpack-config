@@ -237,9 +237,7 @@ function getDefinePlugin(config) {
 	if (config.isSSR) {
 		vars.window = 'undefined';
 	}
-	return [
-		new webpack.DefinePlugin(vars),
-	];
+	return new webpack.DefinePlugin(vars);
 }
 
 function getSSRPlugins() {
