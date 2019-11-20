@@ -242,16 +242,9 @@ function getDefinePlugin(config) {
 	];
 }
 
-function getSSRPlugins(config) {
+function getSSRPlugins() {
 	const VueSSRServerPlugin = require('vue-server-renderer/server-plugin');
-	const env = config.isProduction ? 'production' : 'development';
 	return [
-		new webpack.DefinePlugin({
-			'process.env.NODE_ENV': JSON.stringify(env),
-			'process.env.VUE_ENV': JSON.stringify('server'),
-			window: 'undefined',
-		}),
-
 		// This is the plugin that turns the entire output of the server build
 		// into a single JSON file.
 		new VueSSRServerPlugin({
