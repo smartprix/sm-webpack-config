@@ -228,6 +228,20 @@ function getProgressPlugin() {
 	return SimpleProgressPlugin();
 }
 
+function getDefinePlugin(config) {
+	const env = config.isProduction ? 'production' : 'development';
+	const vars = {
+		'process.env.NODE_ENV': JSON.stringify(env),
+		'process.env.VUE_ENV': JSON.stringify(config.isSSR ? 'server' : 'client'),
+	};
+	if (config.isSSR) {
+		vars.window = 'undefined';
+	}
+	return [
+		new webpack.DefinePlugin(vars),
+	];
+}
+
 function getSSRPlugins(config) {
 	const VueSSRServerPlugin = require('vue-server-renderer/server-plugin');
 	const env = config.isProduction ? 'production' : 'development';
@@ -282,6 +296,9 @@ function getPlugins(config = {}) {
 			plugins.push(getBundleAnalyzerPlugin(config));
 		}
 	}
+
+	// set global vars
+	plugins.push(getDefinePlugin(config));
 
 	if (config.isSSR) {
 		plugins.push(...getSSRPlugins(config));
