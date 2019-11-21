@@ -284,6 +284,14 @@ const config = {
 		variables: {},
 	},
 
+	// vue loader options
+	// see: https://vue-loader.vuejs.org/options.html
+	vue: {
+		compilerOptions: {
+			whitespace: 'condense',
+		},
+	},
+
 	// whether to generate analyzer report with the generated bundle
 	// false in development, true in production
 	// this can also be an object which will be passed to WebpackBundleAnalyzerPlugin

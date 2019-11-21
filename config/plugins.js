@@ -123,17 +123,21 @@ function getCSSFileName(config) {
 }
 
 function getProductionPlugins(config) {
-	const plugins = [
+	const plugins = [];
+
+	plugins.push(
 		// extract css into its own file
 		// MiniCssExtractPlugin does not support base62 hash yet
 		new MiniCssExtractPlugin({
 			filename: getCSSFileName(config),
 			chunkFilename: getCSSFileName(config),
 		}),
+	);
 
+	plugins.push(
 		// keep module.id stable when vendor modules does not change
 		new webpack.HashedModuleIdsPlugin(),
-	];
+	);
 
 	if (!config.isSSR) {
 		plugins.push(

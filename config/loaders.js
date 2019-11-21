@@ -100,14 +100,16 @@ function getVueLoader(config) {
 		options: cacheConfig,
 	};
 
+	const vueLoaderOptions = Object.assign({
+		compilerOptions: {
+			whitespace: 'condense',
+		},
+		...cacheConfig,
+	}, config.vue);
+
 	const vueLoader = {
 		loader: 'vue-loader',
-		options: {
-			compilerOptions: {
-				preserveWhitespace: false,
-			},
-			...cacheConfig,
-		},
+		options: vueLoaderOptions,
 	};
 
 	return {

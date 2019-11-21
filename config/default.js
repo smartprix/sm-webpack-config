@@ -18,6 +18,7 @@ const configWebpack = {
 	cwd: process.cwd(),
 	cssModules: false,
 	devServer: {},
+	vue: {},
 
 	$env_production: {
 		sourceMap: false,
