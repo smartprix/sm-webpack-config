@@ -27,6 +27,7 @@ const defaultEnvOptions = {
 		'es.string.replace',
 		'es.string.trim',
 		'es.symbol.description',
+		'web.url',
 	],
 	shippedProposals: true,
 };
