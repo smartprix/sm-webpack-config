@@ -70,6 +70,9 @@ sm-webpack build
 # OR
 sm-webpack
 
+# Build for development
+sm-webpack build --dev
+
 # Specifiy source and destination
 sm-webpack build --src res/project1 --dest static/dist/project1
 

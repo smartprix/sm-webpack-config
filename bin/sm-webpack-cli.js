@@ -26,10 +26,12 @@ Default option is 'build':
 	.option('--public-url [path]', 'Specify public url path where this will be served from (default: `/{dest}`)')
 	.option('--dev-port [port]', 'Start dev server on port (default: 3001)')
 	.option('--app-port [port]', 'Port for api request (default: 3000)')
+	.option('--dev', 'Build for development', false)
 	.parse(process.argv);
 
 const devPort = Number(program.devPort);
 const appPort = Number(program.appPort);
+const isDev = Boolean(program.dev);
 
 const options = {
 	sourcePath: program.src,
@@ -101,7 +103,12 @@ async function runAndExit() {
 	try {
 		if (build) {
 			console.time('Built', config || '');
-			await smWebpack.runProdWebpack({config: extraConf, webpackConfig});
+			if (isDev) {
+				await smWebpack.runDevWebpack({config: extraConf, webpackConfig});
+			}
+			else {
+				await smWebpack.runProdWebpack({config: extraConf, webpackConfig});
+			}
 			console.timeEnd('Built', config || '');
 			process.exit(0);
 		}
