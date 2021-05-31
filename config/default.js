@@ -11,6 +11,8 @@ const configWebpack = {
 	appendHash: true,
 	library: false,
 	minify: false,
+	gzip: false,
+	clean: true,
 	quiet: true,
 	babel: {},
 	analyzeBundle: false,
@@ -27,6 +29,7 @@ const configWebpack = {
 		publicUrl: '/static/dist',
 		minify: true,
 		analyzeBundle: true,
+		clean: false,
 	},
 
 	$env_development: {},

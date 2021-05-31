@@ -246,6 +246,9 @@ const config = {
 	// makes a .gz file for each bundle produced
 	gzip: false,
 
+	// whether to delete the existing files in the destination folder
+	clean: true,
+
 	// whether to not display much info while running dev server
 	quiet: true,
 

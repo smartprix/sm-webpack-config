@@ -141,19 +141,6 @@ function getProductionPlugins(config) {
 
 	if (!config.isSSR) {
 		plugins.push(
-			// clean the dist folder
-			new CleanWebpackPlugin({
-				// perform clean just before files are emitted to the output dir
-				cleanAfterEveryBuildPatterns: [
-					// don't remove the ssr server bundle
-					'!vue-ssr-server-bundle.json',
-					'!server-bundle.json',
-					'!server-bundle.js',
-					'!vue-ssr-client-manifest.json',
-					'!client-manifest.json',
-				],
-			}),
-
 			// remove all momentjs locale except for the en-gb locale
 			// this helps in reducing momentjs size by quite a bit
 			new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /en-gb/),
@@ -312,6 +299,21 @@ function getPlugins(config = {}) {
 		plugins.push(new VueSSRClientPlugin({
 			filename: 'vue-ssr-client-manifest.json',
 		}));
+	}
+
+	if (!config.isSSR && !config.isDevServer && config.clean) {
+		// clean the dist folder
+		new CleanWebpackPlugin({
+			// perform clean just before files are emitted to the output dir
+			cleanAfterEveryBuildPatterns: [
+				// don't remove the ssr server bundle
+				'!vue-ssr-server-bundle.json',
+				'!server-bundle.json',
+				'!server-bundle.js',
+				'!vue-ssr-client-manifest.json',
+				'!client-manifest.json',
+			],
+		})
 	}
 
 	if (config.isProduction) {
