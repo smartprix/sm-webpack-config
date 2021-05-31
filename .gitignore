@@ -45,6 +45,7 @@ benchmarks/graphs
 # WebStorm
 .idea
 *.iml
+.lh
 
 # Environment Files
 env.*
